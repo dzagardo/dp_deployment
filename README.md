@@ -12,11 +12,11 @@ DP_DEPLOYMENT/
 │ ├── data_synthesizer.py - Script for generating synthetic data
 │ ├── requirements.txt - List of Python dependencies
 │ └── data/
-│ ├── preprocessed_10000_entries.csv - Example CSV file
-│ └── synthetic_data.csv - Generated synthetic data
+│  ├── preprocessed_10000_entries.csv - Example CSV file
+│  └── synthetic_data.csv - Generated synthetic data
 │
 └── frontend/
-└── (React frontend files)
+ └── (React frontend files)
 ```
 
 
