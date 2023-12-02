@@ -8,6 +8,20 @@ interface DataSynthesizerProps {
     setSelectedFile: React.Dispatch<React.SetStateAction<string>>; // Add this line if setSelectedFile is used in DataSynthesizer
 }
 
+import { CSSProperties } from 'react';
+
+const styles: Record<string, CSSProperties> = {
+    container: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '50px', // This makes sure it takes the full height
+    },
+    select: {
+        flexGrow: 1, // This allows the select to grow and fill the space
+    },
+};
+
+
 export default function DataSynthesizer({ onSelectFile, onDataFetched }: DataSynthesizerProps) {
     const [selectedFile, setSelectedFile] = useState<string>('');
     const [fileList, setFileList] = useState<string[]>([]);
@@ -48,13 +62,14 @@ export default function DataSynthesizer({ onSelectFile, onDataFetched }: DataSyn
 
 
     return (
-        <div style={{ flexGrow: 1 }}>
+        <div style={styles.container}>
             <Select
                 value={selectedFile}
                 onChange={handleChange}
                 displayEmpty
                 fullWidth
                 inputProps={{ 'aria-label': 'Select file' }}
+                style={styles.select}
             >
                 <MenuItem disabled value="">
                     Select a file
