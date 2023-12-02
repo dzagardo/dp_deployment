@@ -21,7 +21,6 @@ DP_DEPLOYMENT/
  └── (React frontend files)
 ```
 
-
 ## Backend
 
 The Flask backend (`app.py`) provides the following endpoints:

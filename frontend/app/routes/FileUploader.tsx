@@ -4,21 +4,19 @@ import { Button, CircularProgress, Typography, Alert } from '@mui/material';
 
 interface FileUploaderProps {
   onFileUploaded: (file: File) => void;
-  isUploading: boolean; // New prop to indicate uploading state
+  isUploading: boolean;
 }
 
 export default function FileUploader({ onFileUploaded, isUploading }: FileUploaderProps) {
   const [fileUploaded, setFileUploaded] = useState<File | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false); // New state to track upload success
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Reset upload success state upon new file drop
     setUploadSuccess(false);
-    // Immediately set the file to state when dropped
     setFileUploaded(acceptedFiles[0]);
   }, []);
 
-  const { getRootProps, getInputProps } = useDropzone({ 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     noClick: fileUploaded !== null,
     noKeyboard: fileUploaded !== null
@@ -26,7 +24,7 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
 
   const handleUploadClick = async () => {
     if (fileUploaded) {
-      setUploadSuccess(false); // Reset upload success state before attempting upload
+      setUploadSuccess(false);
       const formData = new FormData();
       formData.append('file', fileUploaded);
 
@@ -37,7 +35,7 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
         });
 
         if (response.ok) {
-          setUploadSuccess(true); // Set upload success to true if response is ok
+          setUploadSuccess(true);
           onFileUploaded(fileUploaded);
         } else {
           console.error('Server error during file upload');
@@ -58,7 +56,7 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
       border: '2px dashed #ccc',
       borderRadius: '4px',
       cursor: fileUploaded ? 'default' : 'pointer',
-      backgroundColor: fileUploaded ? '#f0f0f0' : 'white',
+      backgroundColor: isDragActive ? '#e8f4ff' : (fileUploaded ? '#f0f0f0' : 'white'), // Very light blue background when dragging
     }}>
       <input {...getInputProps()} />
       {isUploading ? (
