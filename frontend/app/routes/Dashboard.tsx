@@ -26,6 +26,8 @@ import DataSynthesizer from './DataSynthesizer';
 import DataGridDisplay from './DataGridDisplay';
 import GenerateButton from './GenerateButton';
 import Papa from 'papaparse';
+import DatasetStatistics from './DatasetStatistics';
+
 
 function Copyright(props: any) {
   return (
@@ -99,7 +101,7 @@ export default function Dashboard() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [gridData, setGridData] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState('');
-
+  const [ratings, setRatings] = useState<number[]>([]); // State to hold ratings data
 
   const handleFileUpload = async (file: File) => {
     setIsUploading(true);
@@ -127,6 +129,7 @@ export default function Dashboard() {
   const onSelectFile = async (filename: string) => {
     setSelectedFile(filename); // Save the selected filename to state
     try {
+      // Fetch the CSV content
       const response = await fetch(`http://localhost:5000/get_file/${filename}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -134,9 +137,21 @@ export default function Dashboard() {
       const text = await response.text();
       Papa.parse(text, {
         header: true,
-        complete: (results) => {
+        complete: async (results) => {
           if (results.data) {
             handleDataFetched(results.data);
+
+            // Now fetch the ratings column from the backend
+            try {
+              const ratingsResponse = await fetch(`http://localhost:5000/get_ratings/${filename}`);
+              if (!ratingsResponse.ok) {
+                throw new Error(`HTTP error! Status: ${ratingsResponse.status}`);
+              }
+              const ratingsData = await ratingsResponse.json();
+              setRatings(ratingsData); // Update the ratings state
+            } catch (error) {
+              console.error('Error fetching ratings:', error);
+            }
           }
         },
       });
@@ -254,20 +269,20 @@ export default function Dashboard() {
           <Toolbar />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Grid container spacing={3}>
-              {/* Chart */}
+              {/* FileUploader */}
               <Grid item xs={12} md={8} lg={9}>
                 <Paper
                   sx={{
                     p: 2,
                     display: 'flex',
                     flexDirection: 'column',
-                    height: 240,
+                    height: 160,
                   }}
                 >
                   <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} />
                 </Paper>
               </Grid>
-              {/* Recent Deposits */}
+              {/* DataSynthesizer */}
               <Grid item xs={12} md={4} lg={3}>
                 <Paper
                   sx={{
@@ -282,7 +297,12 @@ export default function Dashboard() {
                   <GenerateButton onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} />
                 </Paper>
               </Grid>
-              {/* Recent Orders */}
+              <Grid item xs={12}>
+                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+                  <DatasetStatistics data={ratings} />
+                </Paper>
+              </Grid>
+              {/* DataGrid */}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
                   <DataGridDisplay data={gridData} />

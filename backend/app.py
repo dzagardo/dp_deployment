@@ -52,6 +52,21 @@ def get_file(filename):
     except Exception as e:
         logging.error(f"An error occurred while retrieving the file: {e}")
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/get_ratings/<filename>', methods=['GET'])
+def get_ratings(filename):
+    file_path = os.path.join('data', filename)
+    try:
+        if os.path.isfile(file_path):
+            data = pd.read_csv(file_path)
+            # Assuming 'rating' is the column name for ratings in your CSV file
+            ratings = data['rating'].tolist()
+            return jsonify(ratings), 200
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        logging.error(f"An error occurred while retrieving the ratings: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
@@ -86,7 +101,7 @@ def generate_data(filename):
         sample_size = len(original_data)
 
         # Generate synthetic data
-        target_epsilon = 1.0
+        target_epsilon = 10.0
         target_delta = 1e-5
         epochs = 5
 

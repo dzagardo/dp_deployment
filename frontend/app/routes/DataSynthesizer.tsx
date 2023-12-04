@@ -51,11 +51,25 @@ export default function DataSynthesizer({ onSelectFile, onDataFetched }: DataSyn
         // Fetch the CSV content
         const response = await fetch(`http://localhost:5000/get_file/${file}`);
         const text = await response.text();
+
         // Parse CSV content
         Papa.parse(text, {
             header: true,
-            complete: (results) => {
+            complete: async (results) => {
                 onDataFetched(results.data); // Pass the parsed data up
+
+                // Now fetch the ratings column from the backend
+                try {
+                    const ratingsResponse = await fetch(`http://localhost:5000/get_ratings/${file}`);
+                    if (!ratingsResponse.ok) {
+                        throw new Error(`HTTP error! Status: ${ratingsResponse.status}`);
+                    }
+                    const ratings = await ratingsResponse.json();
+                    // Here you would pass the ratings to the DatasetStatistics component
+                    // You might need to set it in the state or use another method to pass this data down
+                } catch (error) {
+                    console.error('Error fetching ratings:', error);
+                }
             },
         });
     };

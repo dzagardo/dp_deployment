@@ -13,7 +13,7 @@ export default function GenerateButton({ onGenerate, filename }: GenerateButtonP
             onClick={() => onGenerate(filename)} // Pass filename to the onGenerate function
             sx={{ mt: 2, width: '100%', flexGrow: 1 }}
         >
-            Generate Synthetic Data
+            Generate Data
         </Button>
     );
 }
