@@ -101,7 +101,7 @@ def generate_data(filename):
         sample_size = len(original_data)
 
         # Generate synthetic data
-        target_epsilon = 10.0
+        target_epsilon = 10
         target_delta = 1e-5
         epochs = 5
 

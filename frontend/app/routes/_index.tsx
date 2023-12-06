@@ -22,13 +22,12 @@ export default function Index() {
             </div>
             <div className="relative px-4 pb-8 pt-16 sm:px-6 sm:pb-14 sm:pt-24 lg:px-8 lg:pb-20 lg:pt-32">
               <h1 className="text-center text-6xl font-extrabold tracking-tight sm:text-8xl lg:text-9xl">
-                <span className="block uppercase text-yellow-500 drop-shadow-md">
-                  Indie Stack
+                <span className="block uppercase text-white drop-shadow-md">
+                  The Privacy Toolbox
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-lg text-center text-xl text-white sm:max-w-3xl">
-                Check the README.md file for instructions on how to get this
-                project deployed.
+                What If Privacy Had A Dashboard?
               </p>
               <div className="mx-auto mt-10 max-w-sm sm:flex sm:max-w-none sm:justify-center">
                 {user ? (
@@ -63,19 +62,19 @@ export default function Index() {
                   </div>
                 )}
               </div>
-              <a href="https://remix.run">
-                <img
+              <a>
+                {/* <img
                   src="https://user-images.githubusercontent.com/1500684/158298926-e45dafff-3544-4b69-96d6-d3bcc33fc76a.svg"
                   alt="Remix"
                   className="mx-auto mt-16 w-full max-w-[12rem] md:max-w-[16rem]"
-                />
+                /> */}
               </a>
             </div>
           </div>
         </div>
 
         <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
-          <div className="mt-6 flex flex-wrap justify-center gap-8">
+          {/* <div className="mt-6 flex flex-wrap justify-center gap-8">
             {[
               {
                 src: "https://user-images.githubusercontent.com/1500684/157764397-ccd8ea10-b8aa-4772-a99b-35de937319e1.svg",
@@ -141,7 +140,7 @@ export default function Index() {
                 <img alt={img.alt} src={img.src} className="object-contain" />
               </a>
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
     </main>
