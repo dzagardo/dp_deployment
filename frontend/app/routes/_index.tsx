@@ -15,10 +15,10 @@ export default function Index() {
             <div className="absolute inset-0">
               <img
                 className="h-full w-full object-cover"
-                src="https://user-images.githubusercontent.com/1500684/157774694-99820c51-8165-4908-a031-34fc371ac0d6.jpg"
-                alt="Sonic Youth On Stage"
+                src="https://github.com/dzagardo/dp_deployment/blob/main/LOGINv3.png?raw=true"
+                alt="Privacy Toolbox"
               />
-              <div className="absolute inset-0 bg-[color:rgba(254,204,27,0.5)] mix-blend-multiply" />
+              <div className="absolute inset-0 bg-[color:rgba(154,104,27,0.5)] mix-blend-multiply" />
             </div>
             <div className="relative px-4 pb-8 pt-16 sm:px-6 sm:pb-14 sm:pt-24 lg:px-8 lg:pb-20 lg:pt-32">
               <h1 className="text-center text-6xl font-extrabold tracking-tight sm:text-8xl lg:text-9xl">
@@ -27,23 +27,27 @@ export default function Index() {
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-lg text-center text-xl text-white sm:max-w-3xl">
-                What If Privacy Had A Dashboard?
+                {/* What If Privacy Had A Dashboard? */}
               </p>
               <div className="mx-auto mt-10 max-w-sm sm:flex sm:max-w-none sm:justify-center">
                 {user ? (
                   <>
-                    <Link
-                      to="/notes"
-                      className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-yellow-700 shadow-sm hover:bg-yellow-50 sm:px-8"
-                    >
-                      View Notes for {user.email}
-                    </Link>
-                    <Link
-                      to="/checklists" // Add link to checklists
-                      className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-green-700 shadow-sm hover:bg-green-50 sm:px-8"
-                    >
-                      View Checklists for {user.email}
-                    </Link>
+                    <p className="mx-auto mt-6 max-w-lg text-center text-xl text-white sm:max-w-3xl">
+                      <Link
+                        to="/notes"
+                        className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-yellow-700 shadow-sm hover:bg-yellow-50 sm:px-8"
+                      >
+                        View Dashboards for {user.email}
+                      </Link>
+                    </p>
+                    {/* <p className="mx-auto mt-6 max-w-lg text-center text-xl text-white sm:max-w-3xl">
+                      <Link
+                        to="/checklists" // Add link to checklists
+                        className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-green-700 shadow-sm hover:bg-green-50 sm:px-8"
+                      >
+                        View Checklists for {user.email}
+                      </Link>
+                    </p> */}
                   </>
                 ) : (
                   <div className="space-y-4 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5 sm:space-y-0">
