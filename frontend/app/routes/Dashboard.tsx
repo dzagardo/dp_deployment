@@ -27,6 +27,7 @@ import DataGridDisplay from './DataGridDisplay';
 import GenerateButton from './GenerateButton';
 import Papa from 'papaparse';
 import DatasetStatistics from './DatasetStatistics';
+import AlgorithmSelector from './AlgorithmSelector';
 
 
 function Copyright(props: any) {
@@ -102,6 +103,11 @@ export default function Dashboard() {
   const [gridData, setGridData] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState('');
   const [ratings, setRatings] = useState<number[]>([]); // State to hold ratings data
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>(''); // State to hold selected algorithm
+
+  const handleAlgorithmSelect = (algorithm: string) => {
+    setSelectedAlgorithm(algorithm); // Update the selected algorithm state
+  };
 
   const handleFileUpload = async (file: File) => {
     setIsUploading(true);
@@ -163,9 +169,13 @@ export default function Dashboard() {
   // Explicitly type the parameter as a string
   const handleGenerateData = async (filename: string) => {
     // Use the filename parameter that is passed to the function
+    if (!selectedAlgorithm) {
+      console.error('No algorithm selected');
+      return;
+    }
     if (filename.trim() !== '') {
       try {
-        const response = await fetch(`http://localhost:5000/generate_data/${encodeURIComponent(filename)}`, {
+        const response = await fetch(`http://localhost:5000/generate_data/${selectedAlgorithm}/${encodeURIComponent(filename)}`, {
           method: 'POST',
           // Include any needed headers, like Content-Type or authorization tokens
         });
@@ -297,8 +307,31 @@ export default function Dashboard() {
                   <GenerateButton onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} />
                 </Paper>
               </Grid>
-              <Grid item xs={12}>
-                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+              {/* AlgorithmSelector */}
+              <Grid item xs={12} md={8} lg={6}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    height: '100%',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <AlgorithmSelector onAlgorithmSelect={handleAlgorithmSelect} />
+                </Paper>
+              </Grid>
+              {/* AlgorithmSelector */}
+              <Grid item xs={12} md={8} lg={6}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    height: '100%',
+                    justifyContent: 'space-between'
+                  }}
+                >
                   <DatasetStatistics data={ratings} />
                 </Paper>
               </Grid>

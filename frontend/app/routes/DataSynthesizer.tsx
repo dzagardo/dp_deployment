@@ -21,7 +21,6 @@ const styles: Record<string, CSSProperties> = {
     },
 };
 
-
 export default function DataSynthesizer({ onSelectFile, onDataFetched }: DataSynthesizerProps) {
     const [selectedFile, setSelectedFile] = useState<string>('');
     const [fileList, setFileList] = useState<string[]>([]);

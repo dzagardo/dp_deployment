@@ -19,27 +19,27 @@ const DatasetStatistics: React.FC<DatasetStatisticsProps> = ({ data }) => {
         const mid = Math.floor(sorted.length / 2);
         return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     };
-    const calculateMode = (numbers: number[]) => {
-        if (numbers.length === 0) return [];
-        const frequency: { [key: number]: number } = {};
-        let maxFreq = 0;
-        let modes: number[] = [];
-        numbers.forEach((number) => {
-            frequency[number] = (frequency[number] || 0) + 1;
-            if (frequency[number] > maxFreq) {
-                maxFreq = frequency[number];
-                modes = [number];
-            } else if (frequency[number] === maxFreq && !modes.includes(number)) {
-                modes.push(number);
-            }
-        });
-        return modes;
-    };
+    // const calculateMode = (numbers: number[]) => {
+    //     if (numbers.length === 0) return [];
+    //     const frequency: { [key: number]: number } = {};
+    //     let maxFreq = 0;
+    //     let modes: number[] = [];
+    //     numbers.forEach((number) => {
+    //         frequency[number] = (frequency[number] || 0) + 1;
+    //         if (frequency[number] > maxFreq) {
+    //             maxFreq = frequency[number];
+    //             modes = [number];
+    //         } else if (frequency[number] === maxFreq && !modes.includes(number)) {
+    //             modes.push(number);
+    //         }
+    //     });
+    //     return modes;
+    // };
 
     // Calculating statistics using placeholder functions
     const mean = calculateMean(data);
     const median = calculateMedian(data);
-    const modes = calculateMode(data);
+    // const modes = calculateMode(data);
 
     // Function to format the display of the statistic
     const formatStatistic = (value: number | number[]) => {
@@ -57,7 +57,7 @@ const DatasetStatistics: React.FC<DatasetStatisticsProps> = ({ data }) => {
                     <TableRow>
                         <TableCell align="left">Mean</TableCell>
                         <TableCell align="left">Median</TableCell>
-                        <TableCell align="left">Mode</TableCell>
+                        {/* <TableCell align="left">Mode</TableCell> */}
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -66,7 +66,7 @@ const DatasetStatistics: React.FC<DatasetStatisticsProps> = ({ data }) => {
                     >
                         <TableCell align="left">{formatStatistic(mean)}</TableCell>
                         <TableCell align="left">{formatStatistic(median)}</TableCell>
-                        <TableCell align="left">{modes.length > 0 ? modes.join(', ') : 'N/A'}</TableCell>
+                        {/* <TableCell align="left">{modes.length > 0 ? modes.join(', ') : 'N/A'}</TableCell> */}
                     </TableRow>
                 </TableBody>
             </Table>

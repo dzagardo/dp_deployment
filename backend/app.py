@@ -8,6 +8,13 @@ from data_synthesizer import generate_private_data
 from flask_cors import CORS
 import os
 import time
+from algorithm_registry import AlgorithmRegistry
+from algorithms.gaussian_mechanism import GaussianMechanism
+from algorithms.laplace_mechanism import LaplaceMechanism
+
+# Register the algorithms
+AlgorithmRegistry.register_algorithm("Gaussian Mechanism", GaussianMechanism)
+AlgorithmRegistry.register_algorithm("Laplace Mechanism", LaplaceMechanism)
 
 app = Flask(__name__)
 CORS(app)
@@ -88,48 +95,54 @@ def upload_csv():
         logging.error(f"An error occurred while saving the file: {e}")
         return str(e), 500
 
-@app.route('/generate_data/<filename>', methods=['POST'])
-def generate_data(filename):
+@app.route('/generate_data/<algorithm_name>/<filename>', methods=['POST'])
+def generate_data(algorithm_name, filename):
     try:
+        logging.info(f"Request to generate data using {algorithm_name} for file {filename}")
+
         uploaded_file_path = os.path.join('data', filename)
         if not os.path.exists(uploaded_file_path):
-            logging.error("File does not exist")
+            logging.error(f"File does not exist: {filename}")
             return "File does not exist", 400
 
-        # Read the uploaded file to determine the number of records
+        logging.info(f"File found: {filename}")
+
+        dp_algorithm = AlgorithmRegistry.get_algorithm(algorithm_name)
+        if not dp_algorithm:
+            logging.error(f"Algorithm not found in registry: {algorithm_name}")
+            raise ValueError(f"Algorithm {algorithm_name} not found in registry")
+
+        logging.info(f"Algorithm retrieved: {algorithm_name}")
+
         original_data = pd.read_csv(uploaded_file_path)
         sample_size = len(original_data)
 
-        # Generate synthetic data
-        target_epsilon = 10
+        target_epsilon = 1.0
         target_delta = 1e-5
-        epochs = 5
 
-        synthetic_data = generate_private_data(
-            uploaded_file_path, sample_size, target_epsilon, target_delta, epochs
-        )
+        logging.info("Generating synthetic data...")
+        synthetic_data = dp_algorithm.generate_synthetic_data(original_data['rating'].values, sample_size, target_epsilon, target_delta)
+
         logging.info("Synthetic data generation complete.")
 
-        # Replace the 'rating' column in the original data with synthetic ratings
         original_data['rating'] = synthetic_data
 
-        # Generate a unique file name using the current timestamp
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         modified_file_name = f"modified_data_{timestamp}.csv"
         modified_file_path = os.path.join('data', modified_file_name)
-        
-        # Save the modified data with the new unique file name
+
         original_data.to_csv(modified_file_path, index=False)
-        logging.info(f"Modified data with synthetic ratings written to {modified_file_path}")
+        logging.info(f"Modified data written to {modified_file_path}")
 
         return jsonify({
             "message": "Data with synthetic ratings generated successfully.",
             "file_path": modified_file_path
         }), 200
-    
+
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        return str(e), 500
+        logging.error(f"An error occurred during data generation: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=False)  # Ensure debug mode is set to False here
