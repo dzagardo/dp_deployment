@@ -1,11 +1,14 @@
+# LaplaceMechanism.py
+
 import numpy as np
 from algorithms.dp_algorithm import DPAlgorithm
 
 class LaplaceMechanism(DPAlgorithm):
-    def generate_synthetic_data(self, data, sample_size, epsilon, delta):
+    def generate_synthetic_data(self, data, sample_size, epsilon, delta, lower_clip, upper_clip):
         # Implementation of synthetic data generation using the Laplace mechanism
-        # This is a placeholder implementation and should be replaced with an actual Laplace noise addition that meets the differential privacy guarantees.
-        sensitivity = 1  # Sensitivity would depend on the data
+        sensitivity = 1  # Sensitivity would depend on the specific data
         scale = sensitivity / epsilon
         synthetic_data = data + np.random.laplace(0, scale, size=(sample_size, len(data)))
-        return synthetic_data
+        # Apply clipping to the synthetic data
+        synthetic_data_clipped = np.clip(synthetic_data, lower_clip, upper_clip)
+        return synthetic_data_clipped

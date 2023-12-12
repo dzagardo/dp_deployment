@@ -100,6 +100,17 @@ def generate_data(algorithm_name, filename):
     try:
         logging.info(f"Request to generate data using {algorithm_name} for file {filename}")
 
+        # Parse epsilon, delta, and clipping values from the request data
+        data = request.get_json()
+        epsilon = data.get('epsilon', 1.0)  # Provide a default value if not given
+        delta = data.get('delta', 1e-5)     # Provide a default value if not given
+        upper_clip = data.get('upper_clip', 5)  # Provide a default value if not given
+        lower_clip = data.get('lower_clip', 0)  # Provide a default value if not given
+
+        # Sanitize epsilon and delta by replacing dots with underscores
+        epsilon_str = str(epsilon).replace('.', '_')
+        delta_str = str(delta).replace('.', '_')
+
         uploaded_file_path = os.path.join('data', filename)
         if not os.path.exists(uploaded_file_path):
             logging.error(f"File does not exist: {filename}")
@@ -117,20 +128,24 @@ def generate_data(algorithm_name, filename):
         original_data = pd.read_csv(uploaded_file_path)
         sample_size = len(original_data)
 
-        target_epsilon = 1.0
-        target_delta = 1e-5
-
         logging.info("Generating synthetic data...")
-        synthetic_data = dp_algorithm.generate_synthetic_data(original_data['rating'].values, sample_size, target_epsilon, target_delta)
+        synthetic_data = dp_algorithm.generate_synthetic_data(
+            original_data['rating'].values,
+            sample_size,
+            epsilon,
+            delta,
+            lower_clip,
+            upper_clip
+        )
 
         logging.info("Synthetic data generation complete.")
 
-        original_data['rating'] = synthetic_data
-
+        # Update the filename to include the algorithm name and clipping values
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        modified_file_name = f"modified_data_{timestamp}.csv"
+        modified_file_name = f"{algorithm_name}_eps{epsilon_str}_delta{delta_str}_lower{lower_clip}_upper{upper_clip}_data_{timestamp}.csv"
         modified_file_path = os.path.join('data', modified_file_name)
 
+        original_data['rating'] = synthetic_data
         original_data.to_csv(modified_file_path, index=False)
         logging.info(f"Modified data written to {modified_file_path}")
 
@@ -142,7 +157,6 @@ def generate_data(algorithm_name, filename):
     except Exception as e:
         logging.error(f"An error occurred during data generation: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=False)  # Ensure debug mode is set to False here

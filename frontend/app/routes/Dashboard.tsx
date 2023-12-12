@@ -29,7 +29,6 @@ import Papa from 'papaparse';
 import DatasetStatistics from './DatasetStatistics';
 import AlgorithmSelector from './AlgorithmSelector';
 
-
 function Copyright(props: any) {
   return (
     <Typography variant="body2" color="text.secondary" align="center" {...props}>
@@ -104,9 +103,23 @@ export default function Dashboard() {
   const [selectedFile, setSelectedFile] = useState('');
   const [ratings, setRatings] = useState<number[]>([]); // State to hold ratings data
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>(''); // State to hold selected algorithm
+  const [epsilon, setEpsilon] = useState<number>(1.0);
+  const [delta, setDelta] = useState<number>(1e-5);
+  const [lowerClip, setLowerClip] = useState<number>(0); // State to hold lower clip value
+  const [upperClip, setUpperClip] = useState<number>(5); // State to hold upper clip value
 
-  const handleAlgorithmSelect = (algorithm: string) => {
-    setSelectedAlgorithm(algorithm); // Update the selected algorithm state
+  const handleAlgorithmSelect = (
+    algorithm: string,
+    epsilonValue: number,
+    deltaValue: number,
+    lowerClipValue: number,
+    upperClipValue: number
+  ) => {
+    setSelectedAlgorithm(algorithm);
+    setEpsilon(epsilonValue);
+    setDelta(deltaValue);
+    setLowerClip(lowerClipValue);
+    setUpperClip(upperClipValue);
   };
 
   const handleFileUpload = async (file: File) => {
@@ -166,18 +179,24 @@ export default function Dashboard() {
     }
   };
 
-  // Explicitly type the parameter as a string
   const handleGenerateData = async (filename: string) => {
-    // Use the filename parameter that is passed to the function
-    if (!selectedAlgorithm) {
-      console.error('No algorithm selected');
+    if (!selectedAlgorithm || epsilon <= 0 || delta <= 0) {
+      console.error('No algorithm selected or invalid epsilon/delta values');
       return;
     }
     if (filename.trim() !== '') {
       try {
         const response = await fetch(`http://localhost:5000/generate_data/${selectedAlgorithm}/${encodeURIComponent(filename)}`, {
           method: 'POST',
-          // Include any needed headers, like Content-Type or authorization tokens
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            epsilon: epsilon,
+            delta: delta,
+            lowerClip: lowerClip,
+            upperClip: upperClip
+          })
         });
 
         if (!response.ok) {
@@ -187,7 +206,6 @@ export default function Dashboard() {
         const result = await response.json();
         console.log('Synthetic data generation result:', result);
         // Handle the result as needed
-
       } catch (error) {
         console.error('Error generating synthetic data:', error);
       }
