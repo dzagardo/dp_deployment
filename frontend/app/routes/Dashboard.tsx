@@ -107,6 +107,11 @@ export default function Dashboard() {
   const [delta, setDelta] = useState<number>(1e-5);
   const [lowerClip, setLowerClip] = useState<number>(0); // State to hold lower clip value
   const [upperClip, setUpperClip] = useState<number>(5); // State to hold upper clip value
+  const [selectedColumn, setSelectedColumn] = useState('');
+
+  const handleColumnSelect = (columnName: string) => {
+    setSelectedColumn(columnName);
+  };
 
   const handleAlgorithmSelect = (
     algorithm: string,
@@ -195,7 +200,8 @@ export default function Dashboard() {
             epsilon: epsilon,
             delta: delta,
             lowerClip: lowerClip,
-            upperClip: upperClip
+            upperClip: upperClip,
+            column_name: selectedColumn
           })
         });
 
@@ -310,6 +316,19 @@ export default function Dashboard() {
                   <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} />
                 </Paper>
               </Grid>
+              <Grid item xs={12} md={6}> {/* Column 1 */}
+                <Paper
+                  sx={{
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    height: '100%',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <DatasetStatistics data={ratings} />
+                </Paper>
+              </Grid>
               {/* DataSynthesizer */}
               <Grid item xs={12} md={4} lg={3}>
                 <Paper
@@ -321,7 +340,7 @@ export default function Dashboard() {
                     justifyContent: 'space-between'
                   }}
                 >
-                  <DataSynthesizer onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} />
+                  <DataSynthesizer onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} />
                   <GenerateButton onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} />
                 </Paper>
               </Grid>
@@ -340,19 +359,6 @@ export default function Dashboard() {
                 </Paper>
               </Grid>
               {/* AlgorithmSelector */}
-              <Grid item xs={12} md={8} lg={6}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'row',
-                    height: '100%',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <DatasetStatistics data={ratings} />
-                </Paper>
-              </Grid>
               {/* DataGrid */}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>

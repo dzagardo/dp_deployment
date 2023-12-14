@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Select, MenuItem, SelectChangeEvent, TextField, InputAdornment } from '@mui/material';
+import { Box, Grid, Select, MenuItem, SelectChangeEvent, TextField, InputAdornment } from '@mui/material';
 
 interface AlgorithmSelectorProps {
   onAlgorithmSelect: (algorithm: string, epsilon: number, delta: number, lowerClip: number, upperClip: number) => void;
@@ -37,55 +37,72 @@ const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({ onAlgorithmSelect
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Select
-        value={selectedAlgorithm}
-        onChange={handleAlgorithmChange}
-        displayEmpty
-        fullWidth
-        inputProps={{ 'aria-label': 'Select algorithm' }}
-      >
-        <MenuItem disabled value="">
-          Select an algorithm
-        </MenuItem>
-        {algorithms.map((algorithm) => (
-          <MenuItem key={algorithm} value={algorithm}>{algorithm}</MenuItem>
-        ))}
-      </Select>
-      <TextField
-        label="Epsilon (ε)"
-        type="number"
-        value={epsilon}
-        onChange={handleEpsilonChange}
-        fullWidth
-        InputProps={{
-          endAdornment: <InputAdornment position="end">ε</InputAdornment>,
-        }}
-      />
-      <TextField
-        label="Delta (δ)"
-        type="number"
-        value={delta}
-        onChange={handleDeltaChange}
-        fullWidth
-        InputProps={{
-          endAdornment: <InputAdornment position="end">δ</InputAdornment>,
-        }}
-      />
-      <TextField
-        label="Lower Clip Value"
-        type="number"
-        value={lowerClip}
-        onChange={handleLowerClipChange}
-        fullWidth
-      />
-      <TextField
-        label="Upper Clip Value"
-        type="number"
-        value={upperClip}
-        onChange={handleUpperClipChange}
-        fullWidth
-      />
+    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}> {/* Column 1 */}
+          <Box sx={{ marginBottom: '20px' }}> {/* Add bottom margin to the Box */}
+
+            <Select
+              value={selectedAlgorithm}
+              onChange={handleAlgorithmChange}
+              displayEmpty
+              fullWidth
+              inputProps={{ 'aria-label': 'Select algorithm' }}
+            >
+              <MenuItem disabled value="">
+                Select an algorithm
+              </MenuItem>
+              {algorithms.map((algorithm) => (
+                <MenuItem key={algorithm} value={algorithm}>{algorithm}</MenuItem>
+              ))}
+            </Select>
+          </Box>
+          <Box sx={{ marginBottom: '20px' }}> {/* Add bottom margin to the Box */}
+            <TextField
+              label="Epsilon (ε)"
+              type="number"
+              value={epsilon}
+              onChange={handleEpsilonChange}
+              fullWidth
+              InputProps={{
+                endAdornment: <InputAdornment position="end">ε</InputAdornment>,
+              }}
+            />
+          </Box>
+          <Box>
+            <TextField
+              label="Delta (δ)"
+              type="number"
+              value={delta}
+              onChange={handleDeltaChange}
+              fullWidth
+              InputProps={{
+                endAdornment: <InputAdornment position="end">δ</InputAdornment>,
+              }}
+            />
+          </Box>
+        </Grid>
+        <Grid item xs={12} md={6}> {/* Column 2 */}
+          <Box sx={{ marginBottom: '20px' }}> {/* Add bottom margin to the Box */}
+            <TextField
+              label="Lower Clip Value"
+              type="number"
+              value={lowerClip}
+              onChange={handleLowerClipChange}
+              fullWidth
+            />
+          </Box>
+          <Box sx={{ marginBottom: '20px' }}> {/* Add bottom margin to the Box */}
+            <TextField
+              label="Upper Clip Value"
+              type="number"
+              value={upperClip}
+              onChange={handleUpperClipChange}
+              fullWidth
+            />
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

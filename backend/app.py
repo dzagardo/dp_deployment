@@ -60,6 +60,20 @@ def get_file(filename):
         logging.error(f"An error occurred while retrieving the file: {e}")
         return jsonify({"error": str(e)}), 500
     
+@app.route('/get_column_names/<filename>', methods=['GET'])
+def get_column_names(filename):
+    file_path = os.path.join('data', filename)
+    try:
+        if os.path.isfile(file_path):
+            data = pd.read_csv(file_path)
+            column_names = data.columns.tolist()  # Extract column names
+            return jsonify(column_names), 200
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        logging.error(f"An error occurred while retrieving column names: {e}")
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/get_ratings/<filename>', methods=['GET'])
 def get_ratings(filename):
     file_path = os.path.join('data', filename)
@@ -100,16 +114,20 @@ def generate_data(algorithm_name, filename):
     try:
         logging.info(f"Request to generate data using {algorithm_name} for file {filename}")
 
-        # Parse epsilon, delta, and clipping values from the request data
+        # Parse epsilon, delta, clipping values, and column name from the request data
         data = request.get_json()
-        epsilon = data.get('epsilon', 1.0)  # Provide a default value if not given
-        delta = data.get('delta', 1e-5)     # Provide a default value if not given
-        upper_clip = data.get('upper_clip', 5)  # Provide a default value if not given
-        lower_clip = data.get('lower_clip', 0)  # Provide a default value if not given
+        epsilon = data.get('epsilon', 1.0)
+        delta = data.get('delta', 1e-5)
+        upper_clip = data.get('upper_clip', 5)
+        lower_clip = data.get('lower_clip', 0)
+        column_name = data.get('column_name')  # This is the new parameter for the column name
 
         # Sanitize epsilon and delta by replacing dots with underscores
         epsilon_str = str(epsilon).replace('.', '_')
         delta_str = str(delta).replace('.', '_')
+        
+        if not column_name:
+            return jsonify({"error": "Column name not provided"}), 400
 
         uploaded_file_path = os.path.join('data', filename)
         if not os.path.exists(uploaded_file_path):
@@ -128,9 +146,13 @@ def generate_data(algorithm_name, filename):
         original_data = pd.read_csv(uploaded_file_path)
         sample_size = len(original_data)
 
+        # Make sure the column exists in the data
+        if column_name not in original_data.columns:
+            return jsonify({"error": f"Column {column_name} not found in data"}), 400
+
         logging.info("Generating synthetic data...")
         synthetic_data = dp_algorithm.generate_synthetic_data(
-            original_data['rating'].values,
+            original_data[column_name].values,
             sample_size,
             epsilon,
             delta,
@@ -145,18 +167,19 @@ def generate_data(algorithm_name, filename):
         modified_file_name = f"{algorithm_name}_eps{epsilon_str}_delta{delta_str}_lower{lower_clip}_upper{upper_clip}_data_{timestamp}.csv"
         modified_file_path = os.path.join('data', modified_file_name)
 
-        original_data['rating'] = synthetic_data
+        original_data[column_name] = synthetic_data
         original_data.to_csv(modified_file_path, index=False)
         logging.info(f"Modified data written to {modified_file_path}")
 
         return jsonify({
-            "message": "Data with synthetic ratings generated successfully.",
+            "message": "Data with synthetic values generated successfully.",
             "file_path": modified_file_path
         }), 200
 
     except Exception as e:
         logging.error(f"An error occurred during data generation: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=False)  # Ensure debug mode is set to False here
