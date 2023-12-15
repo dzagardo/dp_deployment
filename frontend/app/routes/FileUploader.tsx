@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Button, CircularProgress, Typography, Alert } from '@mui/material';
+import { Button, CircularProgress, Typography, Alert, Box } from '@mui/material';
+import CloudUploadIcon from '@mui/icons-material/CloudUploadOutlined'; // Import the icon
 
 interface FileUploaderProps {
   onFileUploaded: (file: File) => void;
@@ -79,14 +80,18 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
                   </Button>
                 </>
               ) : (
-                <Typography variant="subtitle1" gutterBottom>
-                  Drag 'n' drop some files here, or click to select files
-                </Typography>
+                <Box textAlign="center">
+                  <CloudUploadIcon style={{ fontSize: 64 }} /> {/* Adjust the icon size as needed */}
+                  <Typography variant="subtitle1" gutterBottom>
+                    Upload Your CSV File
+                  </Typography>
+                </Box>
               )}
             </>
           )}
         </>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }

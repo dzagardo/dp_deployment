@@ -2,7 +2,9 @@
 
 This project aims to provide an interface for uploading CSV files and generating private synthetic data using a React-based frontend and Flask-based backend.
 
-![GUI](GUI.png)
+![GUI_LOGIN_SCREEN_1](GUI_LOGIN_SCREEN_1.png)
+![GUI_LOGIN_SCREEN_2](GUI_LOGIN_SCREEN_2.png)
+![GUI_DASHBOARD](GUI_DASHBOARD.png)
 
 ## Project Structure
 

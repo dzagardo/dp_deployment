@@ -304,7 +304,7 @@ export default function Dashboard() {
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Grid container spacing={3}>
               {/* FileUploader */}
-              <Grid item xs={12} md={8} lg={9}>
+              <Grid item xs={12} md={8} lg={12}>
                 <Paper
                   sx={{
                     p: 2,
@@ -316,7 +316,28 @@ export default function Dashboard() {
                   <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} />
                 </Paper>
               </Grid>
-              <Grid item xs={12} md={6}> {/* Column 1 */}
+              {/* AlgorithmSelector */}
+              <Grid item xs={12} md={8} lg={12}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    height: '100%',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <AlgorithmSelector onAlgorithmSelect={handleAlgorithmSelect} onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} />
+                </Paper>
+              </Grid>
+              {/* DataGrid */}
+              <Grid item xs={9}>
+                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+                  <DataGridDisplay data={gridData} />
+                </Paper>
+              </Grid>
+              {/* Dataset Stats */}
+              <Grid item xs={12} md={6} lg={3}> {/* Column 1 */}
                 <Paper
                   sx={{
                     p: 2,
@@ -327,42 +348,6 @@ export default function Dashboard() {
                   }}
                 >
                   <DatasetStatistics data={ratings} />
-                </Paper>
-              </Grid>
-              {/* DataSynthesizer */}
-              <Grid item xs={12} md={4} lg={3}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <DataSynthesizer onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} />
-                  <GenerateButton onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} />
-                </Paper>
-              </Grid>
-              {/* AlgorithmSelector */}
-              <Grid item xs={12} md={8} lg={6}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'row',
-                    height: '100%',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <AlgorithmSelector onAlgorithmSelect={handleAlgorithmSelect} />
-                </Paper>
-              </Grid>
-              {/* AlgorithmSelector */}
-              {/* DataGrid */}
-              <Grid item xs={12}>
-                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                  <DataGridDisplay data={gridData} />
                 </Paper>
               </Grid>
             </Grid>

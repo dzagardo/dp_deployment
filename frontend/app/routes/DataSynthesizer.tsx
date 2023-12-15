@@ -9,20 +9,6 @@ interface DataSynthesizerProps {
     onColumnSelect: (columnName: string) => void;
 }
 
-
-import { CSSProperties } from 'react';
-
-const styles: Record<string, CSSProperties> = {
-    container: {
-        display: 'flex',
-        flexDirection: 'column',
-        height: '50px', // This makes sure it takes the full height
-    },
-    select: {
-        flexGrow: 1, // This allows the select to grow and fill the space
-    },
-};
-
 export default function DataSynthesizer({
     onSelectFile, onDataFetched, setSelectedFile, onColumnSelect
 }: DataSynthesizerProps) {
@@ -58,11 +44,11 @@ export default function DataSynthesizer({
         const file = event.target.value as string;
         setFileSelection(file); // Changed this line to use the new setter
         onSelectFile(file);
-    
+
         // Fetch the CSV content
         const response = await fetch(`http://localhost:5000/get_file/${file}`);
         const text = await response.text();
-    
+
         // Fetch the column names for the selected file
         const colResponse = await fetch(`http://localhost:5000/get_column_names/${file}`);
         if (colResponse.ok) {
@@ -112,22 +98,21 @@ export default function DataSynthesizer({
                     <MenuItem key={file} value={file}>{file}</MenuItem>
                 ))}
             </Select>
-            {columnNames.length > 0 && (
-                <Select
-                    value={selectedColumnName}
-                    onChange={handleColumnChange}
-                    displayEmpty
-                    fullWidth
-                    inputProps={{ 'aria-label': 'Select column' }}
-                >
-                    <MenuItem disabled value="">
-                        Select a column
-                    </MenuItem>
-                    {columnNames.map((name) => (
-                        <MenuItem key={name} value={name}>{name}</MenuItem>
-                    ))}
-                </Select>
-            )}
+            <Select
+                value={selectedColumnName}
+                onChange={handleColumnChange}
+                displayEmpty
+                fullWidth
+                inputProps={{ 'aria-label': 'Select column' }}
+            >
+                <MenuItem disabled value="">
+                    {/* Conditional display based on columnNames length */}
+                    {columnNames.length > 0 ? 'Select a column' : 'No columns available'}
+                </MenuItem>
+                {columnNames.map((name) => (
+                    <MenuItem key={name} value={name}>{name}</MenuItem>
+                ))}
+            </Select>
         </div>
     );
 };
