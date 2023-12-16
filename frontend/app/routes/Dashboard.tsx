@@ -16,12 +16,11 @@ import Badge from '@mui/material/Badge';
 import Container from '@mui/material/Container';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import { mainListItems, DataSetListItems } from './listItems';
-import TabularDataView from './Dashboard_Tabular_Data'; // Import the component
-import ImageDataView from './Dashboard_Image_Data'; // Import the component
-import SyntheticDatasetsView from './Dashboard_Synthetic_Datasets'; // Import the component
-import PrivacyBudgetView from './Dashboard_Privacy_Budget'; // Import the component
+import TabularDataView from './Dashboard_Tabular_Data';
+import ImageDataView from './Dashboard_Image_Data';
+import SyntheticDatasetsView from './Dashboard_Synthetic_Datasets';
+import PrivacyBudgetView from './Dashboard_Privacy_Budget';
 
 const drawerWidth: number = 320;
 
@@ -124,12 +123,11 @@ export default function Dashboard() {
             >
               Dashboard
             </Typography>
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-            <Button color="inherit" onClick={handleLogout}>Logout</Button>
+            <form action="/logout" method="post">
+              <Button type="submit" color="inherit">
+                Logout
+              </Button>
+            </form>
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" open={open}>
@@ -169,7 +167,7 @@ export default function Dashboard() {
             <Tabs value={tabValue} onChange={handleTabChange} aria-label="Dashboard Tabs">
               <Tab label="Generating Tabular Data" />
               <Tab label="Generating Image Data" />
-              <Tab label="View Synthetic Datasets" />
+              <Tab label="Manage Synthetic Datasets" />
               <Tab label="Privacy Budget" />
               {/* Add more tabs as needed */}
             </Tabs>
