@@ -13,12 +13,14 @@ export async function getUserByEmail(email: User["email"]) {
   return prisma.user.findUnique({ where: { email } });
 }
 
-export async function createUser(email: User["email"], password: string) {
+// Modify createUser function to accept role parameter
+export async function createUser(email: User["email"], password: string, role: string) {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   return prisma.user.create({
     data: {
       email,
+      role, // Include the role in the user creation
       password: {
         create: {
           hash: hashedPassword,
