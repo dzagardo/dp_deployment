@@ -109,6 +109,8 @@ def upload_csv():
         logging.error(f"An error occurred while saving the file: {e}")
         return str(e), 500
 
+# test
+    
 @app.route('/generate_data/<algorithm_name>/<filename>', methods=['POST'])
 def generate_data(algorithm_name, filename):
     try:
