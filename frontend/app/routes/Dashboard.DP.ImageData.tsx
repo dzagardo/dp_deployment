@@ -20,7 +20,7 @@ import Link from '@mui/material/Link';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import { mainListItems, DataSetListItems } from './listItems';
+import { MainListItems, DataSetListItems } from './listItems';
 import FileUploader from './FileUploader';
 import DataGridDisplay from './DataGridDisplay';
 import Papa from 'papaparse';

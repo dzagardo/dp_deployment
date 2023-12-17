@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button, CircularProgress, Typography, Alert, Box } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUploadOutlined'; // Import the icon
+import FileUploadRoundedIcon from '@mui/icons-material/FileUploadRounded';
 
 interface FileUploaderProps {
   onFileUploaded: (file: File) => void;
@@ -81,7 +81,7 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
                 </>
               ) : (
                 <Box textAlign="center">
-                  <CloudUploadIcon style={{ fontSize: 64 }} /> {/* Adjust the icon size as needed */}
+                  <FileUploadRoundedIcon style={{ fontSize: 36 }} /> {/* Adjust the icon size as needed */}
                   <Typography variant="subtitle1" gutterBottom>
                     Upload Your CSV File
                   </Typography>

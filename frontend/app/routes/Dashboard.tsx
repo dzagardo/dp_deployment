@@ -16,11 +16,12 @@ import Badge from '@mui/material/Badge';
 import Container from '@mui/material/Container';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { mainListItems, DataSetListItems } from './listItems';
-import TabularDataView from './Dashboard_Tabular_Data';
-import ImageDataView from './Dashboard_Image_Data';
-import SyntheticDatasetsView from './Dashboard_Synthetic_Datasets';
-import PrivacyBudgetView from './Dashboard_Privacy_Budget';
+import { MainListItems, DataSetListItems } from './listItems';
+import DashboardHE from './Dashboard.HE';
+import DashboardDP from './Dashboard.DP';
+import DashboardPE from './Dashboard.PE';
+import DashboardPSI from './Dashboard.PSI';
+import DashboardSMPC from './Dashboard.SMPC';
 
 const drawerWidth: number = 320;
 
@@ -77,15 +78,29 @@ const defaultTheme = createTheme();
 
 export default function Dashboard() {
   const [open, setOpen] = useState(true);
-  const [tabValue, setTabValue] = useState(0);
+  const [currentView, setCurrentView] = useState('Differential Privacy');
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  // Render the current view based on state
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'Differential Privacy':
+        return <DashboardDP />;
+      case 'Homomorphic Encryption':
+        return <DashboardHE />;
+      case 'Polymorphic Encryption':
+        return <DashboardPE />;
+      case 'Private Set Intersection':
+        return <DashboardPSI />;
+      case 'Secure Multiparty Computation':
+        return <DashboardSMPC />;
+      // Add cases for other views
+      default:
+        return <div>Selected view not found</div>;
+    }
   };
 
-  const handleLogout = () => {
-    // Implement logout logic here
-    // E.g., clear session and redirect to login page
+  const handleListItemClick = (viewName: React.SetStateAction<string>) => {
+    setCurrentView(viewName);
   };
 
   const toggleDrawer = () => {
@@ -145,7 +160,7 @@ export default function Dashboard() {
           </Toolbar>
           <Divider />
           <List component="nav">
-            {mainListItems}
+            <MainListItems onListItemClick={handleListItemClick} />
             <Divider sx={{ my: 1 }} />
             <DataSetListItems />
           </List>
@@ -163,28 +178,9 @@ export default function Dashboard() {
           }}
         >
           <Toolbar />
-          <Box component="main" sx={{ /* styles */ }}>
-            <Tabs value={tabValue} onChange={handleTabChange} aria-label="Dashboard Tabs">
-              <Tab label="Generating Tabular Data" />
-              <Tab label="Generating Image Data" />
-              <Tab label="Manage Synthetic Datasets" />
-              <Tab label="Privacy Budget" />
-              {/* Add more tabs as needed */}
-            </Tabs>
-            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-              {/* Render content based on the selected tab */}
-              {tabValue === 0 && <TabularDataView />}
-              {tabValue === 1 && <ImageDataView />}
-              {tabValue === 2 && <SyntheticDatasetsView />}
-              {tabValue === 3 && <PrivacyBudgetView />}
-              {/* More views for additional tabs */}
-            </Container>
-          </Box>
+          {renderCurrentView()}
         </Box>
       </Box>
     </ThemeProvider>
   );
 }
-
-// Implement components for each tab view
-

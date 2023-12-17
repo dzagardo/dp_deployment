@@ -10,33 +10,37 @@ import LayersIcon from '@mui/icons-material/Layers';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import React, { useEffect, useState } from 'react';
 
-export const mainListItems = (
+interface MainListItemsProps {
+  onListItemClick: (viewName: string) => void;
+}
+
+export const MainListItems = ({ onListItemClick }: MainListItemsProps) => (
   <React.Fragment>
-    <ListItemButton>
+    <ListItemButton onClick={() => onListItemClick('Differential Privacy')}>
       <ListItemIcon>
         <DashboardIcon />
       </ListItemIcon>
       <ListItemText primary="Differential Privacy" />
     </ListItemButton>
-    <ListItemButton>
+    <ListItemButton onClick={() => onListItemClick('Homomorphic Encryption')}>
       <ListItemIcon>
         <ShoppingCartIcon />
       </ListItemIcon>
       <ListItemText primary="Homomorphic Encryption" />
     </ListItemButton>
-    <ListItemButton>
+    <ListItemButton onClick={() => onListItemClick('Polymorphic Encryption')}>
       <ListItemIcon>
         <PeopleIcon />
       </ListItemIcon>
       <ListItemText primary="Polymorphic Encryption" />
     </ListItemButton>
-    <ListItemButton>
+    <ListItemButton onClick={() => onListItemClick('Private Set Intersection')}>
       <ListItemIcon>
         <BarChartIcon />
       </ListItemIcon>
       <ListItemText primary="Private Set Intersection" />
     </ListItemButton>
-    <ListItemButton>
+    <ListItemButton onClick={() => onListItemClick('Secure Multiparty Computation')}>
       <ListItemIcon>
         <LayersIcon />
       </ListItemIcon>
