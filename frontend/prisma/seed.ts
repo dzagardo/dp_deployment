@@ -16,6 +16,7 @@ async function seed() {
   const user = await prisma.user.create({
     data: {
       email,
+      role: 'Data Scientist',  // Replace 'YourRoleHere' with the actual role you want to assign
       password: {
         create: {
           hash: hashedPassword,
@@ -23,6 +24,7 @@ async function seed() {
       },
     },
   });
+  
 
   // Create sample notes
   await prisma.note.create({

@@ -15,7 +15,8 @@ model User {
   updatedAt  DateTime   @updatedAt
   password   Password?
   notes      Note[]
-  checklists Checklist[] 
+  checklists Checklist[]
+  datasets   Dataset[]  // Relation to Datasets
 }
 
 model Password {
@@ -43,4 +44,16 @@ model Checklist {
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId      String
+}
+
+// New Dataset model
+model Dataset {
+  id             String   @id @default(cuid())
+  name           String   // Descriptive name of the dataset
+  filePath       String   // Path to the dataset file
+  privacy_budget Float    // Privacy budget for the dataset
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Link to the user who manages the dataset
+  userId         String   // User reference
 }

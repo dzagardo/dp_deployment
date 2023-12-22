@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, send_file, session, abort, send_from_directory
+import subprocess
+import json
 import pandas as pd
 from opacus import PrivacyEngine
 import tensorflow as tf
@@ -17,7 +19,8 @@ AlgorithmRegistry.register_algorithm("Gaussian Mechanism", GaussianMechanism)
 AlgorithmRegistry.register_algorithm("Laplace Mechanism", LaplaceMechanism)
 
 app = Flask(__name__)
-CORS(app)
+app.secret_key = os.urandom(16)  # or a hard-coded secret key
+CORS(app, supports_credentials=True)
 logging.basicConfig(level=logging.INFO)
 
 @app.route('/')
@@ -99,17 +102,38 @@ def upload_csv():
         return "No selected file", 400
     
     # Define the path where you want to save the file
-    file_save_path = f'data/{file.filename}'
+    file_save_path = os.path.join('data', file.filename)
     try:
         # Save the file to the filesystem in the data directory
         file.save(file_save_path)
         logging.info(f"File {file.filename} saved as {file_save_path}")
-        return jsonify({"message": "File uploaded successfully", "file_path": file_save_path}), 200
+
+        # Define dataset details (adjust these details as necessary)
+        dataset_details = {
+            "name": file.filename,
+            "filePath": file_save_path,
+            "privacyBudget": 1.0,  # Default or calculated value
+            "userId": "clphhvcof0000rrrankn3d4vn"  # Replace with actual user ID
+        }
+
+        # Call Node.js script to create a new dataset entry
+        result = subprocess.run(
+            ['node', '../frontend/scripts/prismaOperations.js', 'createDatasetForUser', json.dumps(dataset_details)],
+            capture_output=True, text=True
+        )
+
+        if result.returncode != 0:
+            # Handle errors from Node.js script
+            logging.error("Node.js script error: " + result.stderr)
+            return jsonify({"error": "Failed to create dataset entry"}), 500
+
+        # Parse the JSON output from the Node.js script
+        dataset = json.loads(result.stdout)
+        return jsonify({"message": "File and dataset uploaded successfully", "dataset": dataset}), 200
+
     except Exception as e:
         logging.error(f"An error occurred while saving the file: {e}")
         return str(e), 500
-
-# test
     
 @app.route('/generate_data/<algorithm_name>/<filename>', methods=['POST'])
 def generate_data(algorithm_name, filename):
@@ -182,6 +206,68 @@ def generate_data(algorithm_name, filename):
         logging.error(f"An error occurred during data generation: {e}")
         return jsonify({"error": str(e)}), 500
 
+def is_database_admin():
+    user = session.get('user')
+    return user is not None and user.get('role') == 'Database Administrator'
+
+def validate_budget(budget):
+    try:
+        budget = float(budget)  # Ensure the budget can be converted to a float
+        # Define acceptable range for the privacy budget, e.g., 0 < budget <= 1
+        return 0 < budget <= 1
+    except (ValueError, TypeError):
+        return False  # Return False if the budget is not a valid number
+
+@app.route('/update_privacy_budget/<user_id>/<dataset_id>', methods=['POST'])
+def update_privacy_budget(user_id, dataset_id):
+    data = request.get_json()
+    new_budget = data.get('privacy_budget')
+
+    if new_budget is None or not validate_budget(new_budget):
+        return "Invalid privacy budget", 400
+
+    try:
+        # Update the function to include user_id if necessary
+        # For example: update_budget_in_db(user_id, dataset_id, new_budget)
+        update_budget_in_db(dataset_id, new_budget)
+        return "Privacy budget updated successfully", 200
+    except Exception as e:
+        return str(e), 500
+
+
+@app.route('/api/datasets', methods=['GET'])
+def list_datasets():
+    # For demonstration purposes, replace with actual user ID retrieval mechanism
+    user_id = 'clphhvcof0000rrrankn3d4vn'  # Placeholder user ID
+
+    # print("Attempting to list datasets for user: " + user_id)
+
+    try:
+        # Call the Node.js script with the 'listDatasetsForUser' command
+        result = subprocess.run(['ts-node', '../frontend/scripts/prismaOperations.js', 'listDatasetsForUser', user_id], capture_output=True, text=True)
+
+        if result.returncode != 0:
+            # Log the error from the Node.js script and return a response
+            error_message = "Node.js script error: " + result.stderr
+            logging.error(error_message)
+            return jsonify({"error": error_message}), 500
+
+        # Debug: Print the raw output from the Node.js script
+        # print("Raw output from Node.js script: " + result.stdout)
+
+        # Parse the JSON output from the Node.js script
+        datasets = json.loads(result.stdout)
+
+        # Debug: Print the parsed datasets
+        # print("Parsed datasets: " + json.dumps(datasets, indent=2))
+
+        return jsonify(datasets), 200
+
+    except Exception as e:
+        # Log the detailed exception and return a response
+        error_message = f"An error occurred while listing datasets: {e}"
+        logging.error(error_message)
+        return jsonify({"error": error_message}), 500
 
 if __name__ == '__main__':
     app.run(debug=False)  # Ensure debug mode is set to False here
