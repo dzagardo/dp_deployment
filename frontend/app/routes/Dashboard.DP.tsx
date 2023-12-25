@@ -1,41 +1,43 @@
 import React, { useState } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Button from '@mui/material/Button';
-import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import MuiDrawer from '@mui/material/Drawer';
+import { json, LoaderFunction } from "@remix-run/node";
+import { useLoaderData, Outlet } from "@remix-run/react";
+import { getDatasetListItems } from "~/models/dataset.server";
 import Box from '@mui/material/Box';
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import List from '@mui/material/List';
-import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import Badge from '@mui/material/Badge';
 import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Link from '@mui/material/Link';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import { MainListItems, DataSetListItems } from './listItems';
-import FileUploader from './FileUploader';
-import DataGridDisplay from './DataGridDisplay';
-import Papa from 'papaparse';
-import DatasetStatistics from './DatasetStatistics';
-import AlgorithmSelector from './AlgorithmSelector';
 import TabularDataView from './Dashboard.DP.TabularData';
 import ImageDataView from './Dashboard.DP.ImageData';
 import SyntheticDatasetsView from './Dashboard.DP.SyntheticDatasets';
-import PrivacyBudgetView from './Dashboard.DP.PrivacyBudget';
+import DataSetIndexPage from './dashboard.datasets._index';
+import { redirect, ActionFunction } from '@remix-run/node';
+import { requireUserId } from '~/session.server'; // If you're using authentication
+import { createDataset } from '~/models/dataset.server'; // Adjust the path as necessary
 
-// ... other imports ...
+// Define an interface for the loader data
+interface LoaderData {
+  datasetListItems: Array<{
+    id: string;
+    name: string;
+    // add other properties that datasetListItems might have
+  }>;
+}
+
+export const loader: LoaderFunction = async ({ request }) => {
+  try {
+    // Retrieve the user ID from the session or request context
+    const userId = "somehow-obtain-the-user-id-here"; // Update this line accordingly
+    const datasetListItems = await getDatasetListItems({ userId });
+    console.log('Dataset list items fetched:', datasetListItems);
+    return json({ datasetListItems });
+  } catch (error) {
+    console.error('Error fetching dataset list items:', error);
+    throw new Response('Error fetching data', { status: 500 });
+  }
+};
 
 function DashboardDP() {
   const [tabValue, setTabValue] = useState(0);
-
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
@@ -55,7 +57,7 @@ function DashboardDP() {
         {tabValue === 0 && <TabularDataView />}
         {tabValue === 1 && <ImageDataView />}
         {tabValue === 2 && <SyntheticDatasetsView />}
-        {tabValue === 3 && <PrivacyBudgetView />}
+        {tabValue === 3 && <DataSetIndexPage />}
         {/* More views for additional tabs */}
       </Container>
     </Box>

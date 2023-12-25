@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, session, abort, send_from_directory
+from flask import Flask, request, jsonify, send_file, session
 import subprocess
 import json
 import pandas as pd
@@ -161,6 +161,9 @@ def generate_data(algorithm_name, filename):
             return "File does not exist", 400
 
         logging.info(f"File found: {filename}")
+        original_data = pd.read_csv(uploaded_file_path)
+        sample_size = len(original_data)
+
 
         dp_algorithm = AlgorithmRegistry.get_algorithm(algorithm_name)
         if not dp_algorithm:
@@ -169,8 +172,6 @@ def generate_data(algorithm_name, filename):
 
         logging.info(f"Algorithm retrieved: {algorithm_name}")
 
-        original_data = pd.read_csv(uploaded_file_path)
-        sample_size = len(original_data)
 
         # Make sure the column exists in the data
         if column_name not in original_data.columns:
@@ -206,6 +207,51 @@ def generate_data(algorithm_name, filename):
         logging.error(f"An error occurred during data generation: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/datasets/mean_rating/<dataset_id>/<algorithm_name>', methods=['GET'])
+def get_noisy_mean_rating(dataset_id, algorithm_name):
+    try:        
+        # Parse epsilon, delta, clipping values, and column name from the request data
+        data = request.get_json()
+        epsilon = data.get('epsilon', 1.0)
+        delta = data.get('delta', 1e-5)
+        column_name = data.get('column_name')  # This is the new parameter for the column name
+        # Retrieve the rating column
+
+        # Retrieve current epsilon (privacy budget) for the dataset
+        current_epsilon = get_current_epsilon(dataset_id)
+
+        # Define the sensitivity and delta of your query
+        sensitivity = 1  # Set based on your specific dataset and query
+        delta = 1e-5  # Set based on your requirements
+
+        # Get the DP algorithm instance from the registry
+        dp_algorithm = AlgorithmRegistry.get_algorithm(algorithm_name)
+
+        # Calculate the noisy mean
+        noisy_mean = dp_algorithm.generate_noisy_mean(
+            data=data[column_name].values,
+            epsilon=epsilon,
+            delta=delta
+        )
+
+        # Deduct the used epsilon from the dataset's privacy budget
+        deduct_epsilon(dataset_id, current_epsilon)
+
+        return jsonify(mean_rating=noisy_mean), 200
+    except Exception as e:
+        return str(e), 500
+
+def get_current_epsilon(dataset_id):
+    # Retrieve the current privacy budget for the dataset from the database
+    dataset = getDataset(dataset_id)
+    return dataset.privacy_budget
+
+def deduct_epsilon(dataset_id, used_epsilon):
+    # Deduct the used epsilon from the dataset's privacy budget and update the database
+    dataset = getDataset(dataset_id)
+    new_epsilon = max(dataset.privacy_budget - used_epsilon, 0)
+    update_budget_in_db(dataset_id, new_epsilon)
+
 def is_database_admin():
     user = session.get('user')
     return user is not None and user.get('role') == 'Database Administrator'
@@ -218,33 +264,61 @@ def validate_budget(budget):
     except (ValueError, TypeError):
         return False  # Return False if the budget is not a valid number
 
-@app.route('/update_privacy_budget/<user_id>/<dataset_id>', methods=['POST'])
-def update_privacy_budget(user_id, dataset_id):
-    data = request.get_json()
-    new_budget = data.get('privacy_budget')
-
-    if new_budget is None or not validate_budget(new_budget):
-        return "Invalid privacy budget", 400
-
+@app.route('/api/datasets/updatePrivacyBudget/<dataset_id>', methods=['POST'])
+def update_privacy_budget(dataset_id):
     try:
-        # Update the function to include user_id if necessary
-        # For example: update_budget_in_db(user_id, dataset_id, new_budget)
+        data = request.get_json()
+        new_budget = data.get('newBudget')  
+
+        if new_budget is None or not validate_budget(new_budget):
+            return "Invalid privacy budget", 400
+
         update_budget_in_db(dataset_id, new_budget)
-        return "Privacy budget updated successfully", 200
+        return jsonify({"message": "Privacy budget updated successfully"}), 200
+
     except Exception as e:
         return str(e), 500
 
 
+def validate_budget(budget):
+    try:
+        budget = float(budget)
+        return 0 < budget <= 1  # Adjust range as necessary
+    except ValueError:
+        return False
+
+def update_budget_in_db(dataset_id, new_budget):
+    try:
+        print(dataset_id)
+        print(new_budget)
+        # Construct the command to run the Node.js script with the necessary arguments
+        command = ['ts-node', '../frontend/scripts/prismaOperations.js', 'updatePrivacyBudgetForDataset', dataset_id, str(new_budget)]
+
+        # Run the Node.js script
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            # If the Node.js script returned an error, log it and return a response
+            error_message = "Node.js script error: " + result.stderr
+            logging.error(error_message)
+            return jsonify({"error": error_message}), 500
+
+        # If the script was successful, parse the output (if needed) and return a success message
+        # This assumes your Node.js script returns a confirmation message or the updated dataset
+        updated_dataset = json.loads(result.stdout)
+        return jsonify({"message": "Privacy budget updated successfully", "dataset": updated_dataset}), 200
+
+    except Exception as e:
+        # Log any exceptions that occur and return an error response
+        error_message = f"An error occurred during the update: {e}"
+        logging.error(error_message)
+        return jsonify({"error": error_message}), 500
+
 @app.route('/api/datasets', methods=['GET'])
 def list_datasets():
-    # For demonstration purposes, replace with actual user ID retrieval mechanism
-    user_id = 'clphhvcof0000rrrankn3d4vn'  # Placeholder user ID
-
-    # print("Attempting to list datasets for user: " + user_id)
-
     try:
-        # Call the Node.js script with the 'listDatasetsForUser' command
-        result = subprocess.run(['ts-node', '../frontend/scripts/prismaOperations.js', 'listDatasetsForUser', user_id], capture_output=True, text=True)
+        # Call the Node.js script with the 'listDatasets' command
+        result = subprocess.run(['ts-node', '../frontend/scripts/prismaOperations.js', 'listDatasets'], capture_output=True, text=True)
 
         if result.returncode != 0:
             # Log the error from the Node.js script and return a response
@@ -252,14 +326,8 @@ def list_datasets():
             logging.error(error_message)
             return jsonify({"error": error_message}), 500
 
-        # Debug: Print the raw output from the Node.js script
-        # print("Raw output from Node.js script: " + result.stdout)
-
         # Parse the JSON output from the Node.js script
         datasets = json.loads(result.stdout)
-
-        # Debug: Print the parsed datasets
-        # print("Parsed datasets: " + json.dumps(datasets, indent=2))
 
         return jsonify(datasets), 200
 

@@ -8,15 +8,14 @@ generator client {
 }
 
 model User {
-  id         String     @id @default(cuid())
-  email      String     @unique
-  role       String     // Role as a string
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  password   Password?
-  notes      Note[]
-  checklists Checklist[]
-  datasets   Dataset[]  // Relation to Datasets
+  id           String       @id @default(cuid())
+  email        String       @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  password     Password?
+  notes        Note[]
+  role         String?
+  userDatasets UserDataset[] // New relation to UserDataset
 }
 
 model Password {
@@ -35,25 +34,27 @@ model Note {
   userId    String
 }
 
-model Checklist {
-  id          String   @id @default(cuid())
-  title       String
-  description String? 
-  items       String   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId      String
+// Updated Dataset model without user relation
+model Dataset {
+  id            String       @id @default(cuid())
+  fileName      String       // name
+  filePath      String       // Add this line for the file path
+  fileType      String       @default("csv")
+  privacyBudget Float        @default(0) // privacy_budget
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  userDatasets  UserDataset[] // New relation to UserDataset
 }
 
-// New Dataset model
-model Dataset {
-  id             String   @id @default(cuid())
-  name           String   // Descriptive name of the dataset
-  filePath       String   // Path to the dataset file
-  privacy_budget Float    // Privacy budget for the dataset
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Link to the user who manages the dataset
-  userId         String   // User reference
+// New junction table for User-Dataset many-to-many relationship
+model UserDataset {
+  id        String   @id @default(cuid())
+  userId    String
+  datasetId String
+  role      String?  // Optional: You can store specific roles or permissions for this relationship
+
+  user      User     @relation(fields: [userId], references: [id])
+  dataset   Dataset  @relation(fields: [datasetId], references: [id])
+
+  @@unique([userId, datasetId]) // Ensure each user-dataset pair is unique
 }

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
+import { json, redirect, ActionFunction } from '@remix-run/node';
 import Button from '@mui/material/Button';
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -12,22 +11,85 @@ import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-import Badge from '@mui/material/Badge';
-import Container from '@mui/material/Container';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { MainListItems, DataSetListItems } from './listItems';
-import DashboardHE from './Dashboard.HE';
-import DashboardDP from './Dashboard.DP';
-import DashboardPE from './Dashboard.PE';
-import DashboardPSI from './Dashboard.PSI';
-import DashboardSMPC from './Dashboard.SMPC';
+import DashboardHE from './dashboard.he';
+import DashboardDP from './dashboard.dp';
+import DashboardPE from './dashboard.pe';
+import DashboardPSI from './dashboard.psi';
+import DashboardSMPC from './dashboard.smpc';
+import { requireUserId } from '~/session.server';
+import { createDataset } from '~/models/dataset.server';
 
 const drawerWidth: number = 320;
 
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
 }
+
+export const action: ActionFunction = async ({ request }) => {
+  console.log("Action function called");
+
+  try {
+    // Ensure the user is authenticated and get their ID
+    const userId = await requireUserId(request);
+    console.log(`User ID: ${userId}`);
+
+    // Extract form data
+    const formData = await request.formData();
+    console.log('Form Data:', Object.fromEntries(formData));
+
+    const fileName = formData.get('filename');
+    const fileType = formData.get('fileType');
+    const filePath = formData.get('filePath');
+    const privacyBudgetEntry = formData.get('privacyBudget');
+
+    console.log({ fileName, fileType, filePath, privacyBudgetEntry });
+
+    // Validate and convert fileName to a string
+    if (typeof fileName !== 'string' || !fileName.trim()) {
+      console.error('Filename validation failed');
+      return new Response('Filename is required and must be a non-empty string', { status: 400 });
+    }
+
+    // Validate and convert fileType to a string
+    if (typeof fileType !== 'string') {
+      console.error('File type validation failed');
+      return new Response('File type must be a string', { status: 400 });
+    }
+
+    // Validate and convert filePath to a string
+    if (typeof filePath !== 'string') {
+      console.error('File path validation failed');
+      return new Response('File path must be a string', { status: 400 });
+    }
+
+    // Validate and convert privacyBudget to a number
+    const privacyBudget = privacyBudgetEntry ? parseFloat(privacyBudgetEntry.toString()) : null;
+    if (privacyBudget === null || isNaN(privacyBudget)) {
+      console.error('Privacy budget validation failed');
+      return new Response('Privacy budget must be a valid number', { status: 400 });
+    }
+
+    // Perform your logic (e.g., creating a dataset)
+    const dataset = await createDataset({
+      fileName,
+      fileType,
+      filePath,
+      privacyBudget,
+      userId,
+    });
+
+    console.log(`Dataset created with ID: ${dataset.id}`);
+    return redirect(`/datasets/${dataset.id}`);
+
+  } catch (error) {
+    console.error('Failed to process the action:', error);
+    return new Response('Failed to create the dataset', { status: 500 });
+  }
+};
+
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',

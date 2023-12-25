@@ -3,45 +3,46 @@ import { json, redirect } from "@remix-run/node";
 import { Form, useActionData } from "@remix-run/react";
 import { useEffect, useRef } from "react";
 
-import { createNote } from "~/models/note.server";
+import { createDataset } from "~/models/dataset.server";
 import { requireUserId } from "~/session.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const userId = await requireUserId(request);
 
   const formData = await request.formData();
-  const title = formData.get("title");
-  const body = formData.get("body");
+  const fileName = formData.get("filename"); // Ensure this matches the expected field name
+  const fileType = formData.get("fileType") || "csv"; // Default to "csv" if not provided
 
-  if (typeof title !== "string" || title.length === 0) {
+  if (typeof fileName !== "string" || fileName.length === 0) {
     return json(
-      { errors: { body: null, title: "Title is required" } },
+      { errors: { fileName: "Filename is required", fileType: null } },
       { status: 400 },
     );
   }
 
-  if (typeof body !== "string" || body.length === 0) {
-    return json(
-      { errors: { body: "Body is required", title: null } },
-      { status: 400 },
-    );
-  }
+  // Add filePath and privacyBudget here with appropriate values
+  const filePath = "/path/to/file"; // Replace with actual path or get from formData
+  const privacyBudget = 1.0; // Replace with actual value or get from formData
 
-  const note = await createNote({ body, title, userId });
+  const dataset = await createDataset({
+    fileName,
+    fileType: typeof fileType === "string" ? fileType : "csv",
+    filePath,
+    privacyBudget,
+    userId,
+  });
 
-  return redirect(`/notes/${note.id}`);
+  return redirect(`/datasets/${dataset.id}`);
 };
 
-export default function NewNotePage() {
+
+export default function NewDatasetPage() {
   const actionData = useActionData<typeof action>();
-  const titleRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const filenameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (actionData?.errors?.title) {
-      titleRef.current?.focus();
-    } else if (actionData?.errors?.body) {
-      bodyRef.current?.focus();
+    if (actionData?.errors?.fileName) {
+      filenameRef.current?.focus();
     }
   }, [actionData]);
 
@@ -57,43 +58,33 @@ export default function NewNotePage() {
     >
       <div>
         <label className="flex w-full flex-col gap-1">
-          <span>Title: </span>
+          <span>Filename: </span>
           <input
-            ref={titleRef}
-            name="title"
+            ref={filenameRef}
+            name="filename"
             className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
-            aria-invalid={actionData?.errors?.title ? true : undefined}
+            aria-invalid={actionData?.errors?.fileName ? true : undefined}
             aria-errormessage={
-              actionData?.errors?.title ? "title-error" : undefined
+              actionData?.errors?.fileName ? "filename-error" : undefined
             }
           />
         </label>
-        {actionData?.errors?.title ? (
-          <div className="pt-1 text-red-700" id="title-error">
-            {actionData.errors.title}
+        {actionData?.errors?.fileName ? (
+          <div className="pt-1 text-red-700" id="filename-error">
+            {actionData.errors.fileName}
           </div>
         ) : null}
       </div>
 
       <div>
         <label className="flex w-full flex-col gap-1">
-          <span>Body: </span>
-          <textarea
-            ref={bodyRef}
-            name="body"
-            rows={8}
-            className="w-full flex-1 rounded-md border-2 border-blue-500 px-3 py-2 text-lg leading-6"
-            aria-invalid={actionData?.errors?.body ? true : undefined}
-            aria-errormessage={
-              actionData?.errors?.body ? "body-error" : undefined
-            }
+          <span>File Type (optional): </span>
+          <input
+            name="fileType"
+            defaultValue="csv" // Default value set here for clarity
+            className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
           />
         </label>
-        {actionData?.errors?.body ? (
-          <div className="pt-1 text-red-700" id="body-error">
-            {actionData.errors.body}
-          </div>
-        ) : null}
       </div>
 
       <div className="text-right">

@@ -9,6 +9,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import LayersIcon from '@mui/icons-material/Layers';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface MainListItemsProps {
   onListItemClick: (viewName: string) => void;
@@ -105,14 +106,14 @@ export const DataSetListItems = () => {
           <ListItemIcon>
             <AssignmentIcon />
           </ListItemIcon>
-          <ListItemText 
-            primary={dataset} 
+          <ListItemText
+            primary={dataset}
             sx={{
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               maxWidth: '320px', // Adjust the width as needed
-            }} 
+            }}
           />
         </ListItemButton>
       ))}

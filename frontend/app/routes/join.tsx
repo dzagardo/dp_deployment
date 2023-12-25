@@ -134,7 +134,7 @@ export default function Join() {
                 className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
               >
                 <option value="DATA_SCIENTIST">Data Scientist</option>
-                <option value="DATABASE_ADMINISTRATOR">Database Administrator</option>
+                <option value="DATA_ADMINISTRATOR">Data Administrator</option>
                 <option value="DATA_OWNER">Data Owner</option>
               </select>
             </div>

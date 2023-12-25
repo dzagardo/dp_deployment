@@ -43,22 +43,19 @@ async function seed() {
     },
   });
 
-  // Create sample checklists
-  await prisma.checklist.create({
+  await prisma.dataset.create({
     data: {
-      title: "My first checklist",
-      items: "Item 1, Item 2, Item 3", // Example format
-      userId: user.id,
+      fileName: "Sample Dataset 1",
+      filePath: "/path/to/dataset1.csv",
+      fileType: "csv",
+      privacyBudget: 1.0,
+      userDatasets: {
+        create: { userId: user.id },
+      },
     },
   });
-
-  await prisma.checklist.create({
-    data: {
-      title: "My second checklist",
-      items: "Item A, Item B, Item C", // Example format
-      userId: user.id,
-    },
-  });
+  
+  // Repeat as necessary for additional sample datasets.  
 
   console.log(`Database has been seeded. 🌱`);
 }
