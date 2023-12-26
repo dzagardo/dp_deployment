@@ -8,17 +8,13 @@ import { useUser } from "~/utils";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
     const userId = await requireUserId(request);
-    console.log(userId);
     const datasetListItems = await getDatasetListItems({ userId });
-    console.log(datasetListItems);
     return json({ datasetListItems });
 };
 
 export default function DatasetView() {
     const data = useLoaderData<typeof loader>();
-    console.log(data);
     const user = useUser();
-    console.log(user);
 
     return (
         <div className="flex h-full min-h-screen flex-col">
@@ -27,7 +23,7 @@ export default function DatasetView() {
                     <Link to="/">Home</Link>
                 </h1>
                 <h1 className="text-3xl font-bold">
-                    <Link to="/datasets">Datasets</Link>
+                    <Link to="/dashboard/datasets">Datasets</Link>
                 </h1>
                 <h1 className="text-3xl font-bold">
                     <Link to="/notes">Notes</Link>

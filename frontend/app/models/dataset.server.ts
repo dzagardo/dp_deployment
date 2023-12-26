@@ -51,6 +51,11 @@ export async function createDataset({
   });
 }
 
+export async function getDatasets() {
+  return prisma.dataset.findMany();
+}
+
+
 export async function deleteDataset({ id, userId }: { id: string; userId: string }) {
   const userDataset = await prisma.userDataset.findFirst({
     where: { userId, datasetId: id },

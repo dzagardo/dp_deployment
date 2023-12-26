@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { json, redirect, ActionFunction } from '@remix-run/node';
+import { json, redirect, ActionFunction, LoaderFunction } from '@remix-run/node';
 import Button from '@mui/material/Button';
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -21,6 +21,18 @@ import DashboardPSI from './dashboard.psi';
 import DashboardSMPC from './dashboard.smpc';
 import { requireUserId } from '~/session.server';
 import { createDataset } from '~/models/dataset.server';
+import { useLoaderData } from "@remix-run/react";
+
+// Type for the loader data
+type LoaderData = {
+  userId: string | undefined;
+};
+
+export const loader: LoaderFunction = async ({ request }: { request: Request }): Promise<Response> => {
+  const userId = await requireUserId(request);
+  // You can handle redirection or errors if the user is not logged in.
+  return json({ userId });
+};
 
 const drawerWidth: number = 320;
 
@@ -82,7 +94,7 @@ export const action: ActionFunction = async ({ request }) => {
     });
 
     console.log(`Dataset created with ID: ${dataset.id}`);
-    return redirect(`/datasets/${dataset.id}`);
+    return redirect(`/dashboard/datasets/${dataset.id}`);
 
   } catch (error) {
     console.error('Failed to process the action:', error);
@@ -141,6 +153,7 @@ const defaultTheme = createTheme();
 export default function Dashboard() {
   const [open, setOpen] = useState(true);
   const [currentView, setCurrentView] = useState('Differential Privacy');
+  const { userId } = useLoaderData<LoaderData>(); // Specify the type of loader data
 
   // Render the current view based on state
   const renderCurrentView = () => {
@@ -200,6 +213,11 @@ export default function Dashboard() {
             >
               Dashboard
             </Typography>
+            <form action={`/user/${userId}`} method="get">
+              <Button type="submit" color="inherit">
+                Profile
+              </Button>
+            </form>
             <form action="/logout" method="post">
               <Button type="submit" color="inherit">
                 Logout
