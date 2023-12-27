@@ -29,7 +29,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
 
   await deleteDataset({ id: params.datasetId, userId });
 
-  return redirect("/dashboard/datasets");
+  return redirect("/dashboard/dp/datasets/edit");
 };
 
 export default function DatasetDetailsPage() {
@@ -56,16 +56,13 @@ export default function DatasetDetailsPage() {
           Edit
         </Link>
 
-        {/* Delete Form */}
-        <Form method="post" className="inline">
-          <button
-            type="submit"
-            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
-          >
-            Delete
-          </button>
-        </Form>
-
+        {/* Delete Button */}
+        <Link
+          to={`/dashboard/dp/datasets/delete/${dataset.id}`}
+          className="inline-block ml-2 rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 focus:bg-red-400"
+        >
+          Delete
+        </Link>
       </div>
     </div>
   );

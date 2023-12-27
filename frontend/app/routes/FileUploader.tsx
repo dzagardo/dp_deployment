@@ -9,7 +9,6 @@ import { useLoaderData } from '@remix-run/react';
 import { createDataset } from '~/models/dataset.server';
 
 interface FileUploaderProps {
-  onFileUploaded: (file: File) => void;
   isUploading: boolean;
 }
 
@@ -53,7 +52,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({ datasetListItems, userId });  // Include userId in the response
 };
 
-export default function FileUploader({ onFileUploaded, isUploading }: FileUploaderProps) {
+export default function FileUploader({ isUploading }: FileUploaderProps) {
   const [fileUploaded, setFileUploaded] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
   const { datasetListItems, userId } = useLoaderData<typeof loader>();
@@ -78,6 +77,7 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
 
       try {
         // Send the file to the server for upload
+
         const response = await fetch('/dashboard/dp/huh', {
           method: 'POST',
           body: formData,
@@ -88,8 +88,6 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
           // If the upload is successful, set uploadSuccess to true
           setUploadSuccess(true);
 
-          // Call the onFileUploaded callback to handle the uploaded file
-          onFileUploaded(fileUploaded);
 
           // Extract the data from response if needed
           const data = await response.json();
@@ -98,14 +96,18 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
           console.log('File uploaded and dataset created', data);
 
           console.log('After createDataset call');
+
         } else {
           // Handle server errors
+          console.log("here");
+
           console.error('Server error during file upload:', response.statusText);
           const errorText = await response.text(); // or response.json() if it returns JSON
           console.error('Server error during file upload:', errorText);
         }
       } catch (error) {
         // Handle network or other errors
+        console.log("here");
         console.error('Network error during file upload:', error);
       }
     } else {
@@ -129,7 +131,7 @@ export default function FileUploader({ onFileUploaded, isUploading }: FileUpload
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          height: '100%',
+          height: 128,
           border: '2px dashed #ccc',
           borderRadius: '4px',
           cursor: fileUploaded ? 'default' : 'pointer',

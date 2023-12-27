@@ -1,3 +1,4 @@
+import uuid
 from flask import Flask, request, jsonify, send_file, session
 import subprocess
 import json
@@ -102,21 +103,30 @@ def upload_csv():
         if file.filename == '':
             return "No selected file", 400
 
+        # Generate a unique identifier
+        unique_id = uuid.uuid4().hex
+
+        # Split the file name to add the unique identifier
+        name, ext = os.path.splitext(file.filename)
+        unique_filename = f"{name}_{unique_id}{ext}"
+
         # Define the path where you want to save the file
-        file_save_path = os.path.join('data', file.filename)
+        file_save_path = os.path.join('data', unique_filename)
 
         # Save the file to the filesystem in the data directory
         file.save(file_save_path)
         logging.info(f"File {file.filename} saved as {file_save_path}")
 
-        return jsonify({"message": "File and dataset uploaded successfully", "dataset": file_save_path}), 200
+        # Flask backend pseudo-code
+        return jsonify({
+            "message": "File and dataset uploaded successfully",
+            "fileName": unique_filename,  # The actual saved file name
+            "filePath": file_save_path
+        }), 200
 
     except Exception as e:
         logging.error(f"An error occurred while processing the file: {str(e)}")
         return str(e), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
     
 @app.route('/generate_data/<algorithm_name>/<filename>', methods=['POST'])
 def generate_data(algorithm_name, filename):
@@ -319,6 +329,70 @@ def list_datasets():
         error_message = f"An error occurred while listing datasets: {e}"
         logging.error(error_message)
         return jsonify({"error": error_message}), 500
+
+@app.route('/rename_file', methods=['POST'])
+def rename_file():
+    try:
+        data = request.get_json()
+        original_file_path = data.get('original_file_path')
+        new_file_name = data.get('new_file_name')
+
+        if not original_file_path or not new_file_name:
+            logging.error(f"Missing data: original_file_path={original_file_path}, new_file_name={new_file_name}")
+            return jsonify({"error": "Missing data for original file path or new file name"}), 400
+
+        original_full_path = os.path.join(original_file_path)
+        new_full_path = os.path.join('./data/', new_file_name)
+
+        print(new_full_path);
+        print(new_file_name);
+        print(original_full_path);
+
+        logging.info(f"Attempting to rename: {original_full_path} to {new_full_path}")
+
+        if os.path.exists(original_full_path):
+            os.rename(original_full_path, new_full_path)
+            logging.info(f"File renamed from {original_full_path} to {new_full_path}")
+            return jsonify({"message": "File renamed successfully", "new_file_path": new_full_path}), 200
+        else:
+            logging.error(f"Original file does not exist: {original_full_path}")
+            return jsonify({"error": "Original file does not exist"}), 404
+
+    except Exception as e:
+        logging.error(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/delete_file', methods=['POST'])
+def delete_file():
+    try:
+        # Extracting data from the request
+        data = request.get_json()
+        original_file_path = data.get('original_file_path')
+        original_file_name = data.get('original_file_name')
+
+        if not original_file_path:
+            logging.error(f"Missing data: original_file_path={original_file_path}")
+            return jsonify({"error": "Missing data for original file path"}), 400
+
+        # Constructing the full path to the file
+        full_file_path = os.path.join("./data/", original_file_name)
+
+        logging.info(f"Attempting to delete: {full_file_path}")
+
+        print(full_file_path)
+
+        # Checking if the file exists and deleting it
+        if os.path.exists(full_file_path):
+            os.remove(full_file_path)
+            logging.info(f"File {full_file_path} deleted successfully")
+            return jsonify({"message": "File deleted successfully"}), 200
+        else:
+            logging.error(f"File does not exist: {full_file_path}")
+            return jsonify({"error": "File does not exist"}), 404
+
+    except Exception as e:
+        logging.error(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=False)  # Ensure debug mode is set to False here

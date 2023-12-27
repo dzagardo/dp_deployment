@@ -17,8 +17,8 @@ const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({ onAlgorithmSelect
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
   const [epsilon, setEpsilon] = useState<number>(1.0);
   const [delta, setDelta] = useState<number>(1e-5);
-  const [lowerClip, setLowerClip] = useState<number>(0);
-  const [upperClip, setUpperClip] = useState<number>(5);
+  const [lowerClip, setLowerClip] = useState<number | ''>('');
+  const [upperClip, setUpperClip] = useState<number | ''>('');
   const [selectedFile, setFileSelection] = useState<string>(''); // Renamed this line
   const [fileList, setFileList] = useState<string[]>([]);
   const [columnNames, setColumnNames] = useState<string[]>([]);
@@ -45,8 +45,14 @@ const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({ onAlgorithmSelect
   const handleAlgorithmChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     setSelectedAlgorithm(value);
-    onAlgorithmSelect(value, epsilon, delta, lowerClip, upperClip);
+    
+    // Convert lowerClip and upperClip to numbers, use a default value if they are empty strings
+    const numLowerClip = lowerClip === '' ? 0 : lowerClip;
+    const numUpperClip = upperClip === '' ? 5 : upperClip;
+    
+    onAlgorithmSelect(value, epsilon, delta, numLowerClip, numUpperClip);
   };
+  
 
   const handleEpsilonChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setEpsilon(Number(event.target.value));
@@ -57,11 +63,13 @@ const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({ onAlgorithmSelect
   };
 
   const handleLowerClipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLowerClip(Number(event.target.value));
+    const value = event.target.value;
+    setLowerClip(value === '' ? value : Number(value));
   };
-
+  
   const handleUpperClipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUpperClip(Number(event.target.value));
+    const value = event.target.value;
+    setUpperClip(value === '' ? value : Number(value));
   };
 
   const handleColumnChange = (event: SelectChangeEvent<string>) => {

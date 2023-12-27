@@ -1,9 +1,12 @@
 
 // frontend/app/routes/dashboard.datasets.lookup.tsx
 
+import { Grid, Paper } from "@mui/material";
 import { LoaderFunction, json } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { getDatasets } from "~/models/dataset.server"; // Adjust the import path to your actual function
+import FileUploader from "./fileuploader";
+import { useState } from "react";
 
 export const loader: LoaderFunction = async () => {
   try {
@@ -27,15 +30,6 @@ const DatasetLookupPage = () => {
   return (
     <div>
       <h1>Select a Dataset</h1>
-      {/* <div style={{ overflowY: 'auto', maxHeight: '400px', border: '1px solid #ccc' }}>
-        {datasets.map((dataset) => (
-          <div key={dataset.id} style={{ padding: '10px', borderBottom: '1px solid #eee' }}>
-            <Link to={`/dashboard/dp/datasets/${dataset.id}`} style={{ textDecoration: 'none' }}>
-              {dataset.name}
-            </Link>
-          </div>
-        ))}
-      </div> */}
     </div>
   );
 };

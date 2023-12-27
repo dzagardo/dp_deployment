@@ -21,44 +21,52 @@ import { createDataset } from '~/models/dataset.server';
 import { useLoaderData } from '@remix-run/react';
 
 export const action: ActionFunction = async ({ request }) => {
-    console.log('Action function called'); // Confirm the action function is being invoked
+    console.log('Action function called');
     const userId = await requireUserId(request);
-    console.log('User ID:', userId); // Log the user ID
 
     const formData = await request.formData();
-    console.log('All FormData:', Object.fromEntries(formData));
-    formData.forEach((value, key) => {
-        console.log(`${key}: ${value}`);
-    });
-    const file = formData.get('file');
-    const fileName = formData.get('filename');
-    const fileType = (formData.get("fileType") as string) || "csv";
-    const privacyBudget = formData.get('privacyBudget') || 1.0;
+    const file = formData.get('file') as File;
+    const privacyBudget = formData.get('privacyBudget') || '1.0';
 
-    // Log the extracted data
-    console.log('File:', file);
-    console.log('FileName:', fileName);
-    console.log('FileType:', fileType);
-    console.log('PrivacyBudget:', privacyBudget);
-
-    if (!file || typeof fileName !== 'string' || !fileName) {
+    if (!file || file.name === '') {
         console.error('Validation failed: File and filename are required.');
         return json({ error: 'File and filename are required.' }, { status: 400 });
     }
 
-    const filePath = `/data/${fileName}`;
-    console.log('FilePath:', filePath); // Log the constructed file path
+    // Prepare the form data to send to Flask backend
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('privacyBudget', privacyBudget);
 
     try {
+        // Send the file to the Flask backend for upload
+        const uploadResponse = await fetch('http://localhost:5000/upload_csv', {
+            method: 'POST',
+            body: uploadFormData,
+        });
+
+        if (!uploadResponse.ok) {
+            // Handle server errors
+            console.error('Server error during file upload:', uploadResponse.statusText);
+            const errorText = await uploadResponse.text();
+            return json({ error: 'Failed to upload file.' }, { status: uploadResponse.status });
+        }
+
+        // Extract the actual saved file name from Flask backend response
+        const uploadData = await uploadResponse.json();
+        const actualSavedFileName = uploadData.fileName;
+        const filePath = uploadData.filePath;
+
+        // Now create the dataset entry with the actual saved file name
         const dataset = await createDataset({
-            fileName,
-            fileType,
+            fileName: actualSavedFileName,
+            fileType: file.type || 'text/csv',
             filePath,
             privacyBudget: Number(privacyBudget),
             userId,
         });
 
-        console.log('Dataset created:', dataset); // Log the created dataset
+        console.log('Dataset created:', dataset);
         return json({ dataset });
     } catch (error) {
         console.error('Failed to create dataset:', error);
@@ -86,16 +94,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 function Huh() {
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [gridData, setGridData] = useState<any[]>([]);
     const [selectedFile, setSelectedFile] = useState('');
     const [ratings, setRatings] = useState<number[]>([]); // State to hold ratings data
     const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>(''); // State to hold selected algorithm
     const [epsilon, setEpsilon] = useState<number>(1.0);
     const [delta, setDelta] = useState<number>(1e-5);
-    const [lowerClip, setLowerClip] = useState<number>(0); // State to hold lower clip value
-    const [upperClip, setUpperClip] = useState<number>(5); // State to hold upper clip value
+    const [lowerClip, setLowerClip] = useState<number | ''>('');
+    const [upperClip, setUpperClip] = useState<number | ''>('');
     const [selectedColumn, setSelectedColumn] = useState('');
     const { datasetListItems, userId } = useLoaderData<typeof loader>();
 
@@ -116,29 +122,6 @@ function Huh() {
         setDelta(deltaValue);
         setLowerClip(lowerClipValue);
         setUpperClip(upperClipValue);
-    };
-
-    const handleFileUpload = async (file: File) => {
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await fetch('http://localhost:5000/upload_csv', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            console.log('File uploaded successfully');
-            setUploadedFile(file);
-        } catch (error) {
-            console.error('Upload failed:', error);
-        } finally {
-            setIsUploading(false);
-        }
     };
 
     const onSelectFile = async (filename: string) => {
@@ -182,6 +165,13 @@ function Huh() {
         }
         if (filename.trim() !== '') {
             try {
+                console.log('Sending data with:', {
+                    epsilon: epsilon,
+                    delta: delta,
+                    lowerClip: lowerClip,
+                    upperClip: upperClip,
+                    column_name: selectedColumn
+                });
                 const response = await fetch(`http://localhost:5000/generate_data/${selectedAlgorithm}/${encodeURIComponent(filename)}`, {
                     method: 'POST',
                     headers: {
@@ -239,19 +229,6 @@ function Huh() {
                 </Paper>
             </Box>
             <Grid container spacing={2}> {/* Adjusted spacing */}
-                {/* FileUploader */}
-                <Grid item xs={12} md={8} lg={12}>
-                    <Paper
-                        sx={{
-                            p: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            height: 160,
-                        }}
-                    >
-                        <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} />
-                    </Paper>
-                </Grid>
                 {/* AlgorithmSelector */}
                 <Grid item xs={12} md={8} lg={12}>
                     <Paper

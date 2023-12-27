@@ -21,39 +21,89 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
+    console.log('Action called for dataset edit.');
     const userId = await requireUserId(request);
+    console.log(`User ID: ${userId}`);
+
     invariant(params.datasetId, "datasetId not found");
+    console.log(`Dataset ID: ${params.datasetId}`);
+
     const formData = await request.formData();
-    const fileName = formData.get("fileName");
-    const privacyBudget = formData.get("privacyBudget");
-    const filePath = formData.get("filePath");
+    console.log('Form Data:', Object.fromEntries(formData.entries()));
 
-    if (typeof filePath !== "string" || filePath.length === 0) {
-        return json({ error: "File path is required" }, { status: 400 });
+    const newFileName = formData.get("fileName") as string;
+    const privacyBudget = formData.get("privacyBudget") as string;
+    let originalFilePath = formData.get("filePath") as string;
+    const newFilePath = `./data/${newFileName}`; // Updated to define newFilePath
+
+    console.log(`Original File Path: ${originalFilePath}`);
+    console.log(`New File Name: ${newFileName}`);
+    console.log(`Privacy Budget: ${privacyBudget}`);
+
+    if (!originalFilePath) {
+        console.error('Original file path is missing.');
+        return json({ error: "Original file path is required" }, { status: 400 });
     }
 
-    if (typeof fileName !== "string" || fileName.length === 0) {
-        return json({ error: "Filename is required" }, { status: 400 });
-    }
-    if (typeof privacyBudget !== "string" || privacyBudget.length === 0) {
-        return json({ error: "Privacy Budget is required" }, { status: 400 });
+    if (!newFileName) {
+        console.error('New file name is missing.');
+        return json({ error: "New filename is required" }, { status: 400 });
     }
 
     const privacyBudgetValue = parseFloat(privacyBudget);
+    console.log(`Parsed Privacy Budget: ${privacyBudgetValue}`);
+
     if (isNaN(privacyBudgetValue)) {
+        console.error('Privacy budget is not a number.');
         return json({ error: "Privacy Budget must be a number" }, { status: 400 });
     }
 
-    // Update the dataset
+    const originalDataset = await getDataset({ id: params.datasetId, userId });
+    console.log(`Original Dataset:`, originalDataset);
+
+    if (originalDataset.fileName !== newFileName) {
+        try {
+            const response = await fetch(`http://localhost:5000/rename_file`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    original_file_path: originalFilePath, // Changed from originalFilePath
+                    new_file_name: newFileName,         // Changed from newFileName
+                }),
+            });
+
+            // Add detailed logging
+            if (!response.ok) {
+                const errorDetail = await response.text(); // assuming the error detail is in text format
+                console.error(`Backend file rename failed with status ${response.status}: ${errorDetail}`);
+                console.log(newFileName);
+                console.log(newFilePath);
+                throw new Error(`Error renaming file on the backend: ${errorDetail}`);
+            }
+
+            const renameResult = await response.json();
+            originalFilePath = renameResult.newFilePath;
+        } catch (error) {
+            console.error(`Error occurred during file rename: ${error}`);
+            return json({ error: 'Error renaming file' }, { status: 500 });
+        }
+    } else {
+        console.log('Filename has not changed, no need to rename on the backend.');
+    }
+
+    console.log(originalFilePath);
+    console.log(newFilePath);
+    console.log('Updating dataset with new information.');
     const updatedDataset = await updateDataset({
         id: params.datasetId,
         userId,
         data: {
-            fileName,
+            fileName: newFileName,
             privacyBudget: privacyBudgetValue,
-            filePath,
+            filePath: newFilePath,
         },
     });
+    console.log('Dataset updated:', updatedDataset);
 
     return redirect(`/dashboard/dp/datasets/${updatedDataset.id}`);
 };
@@ -71,7 +121,7 @@ export default function EditDatasetPage() {
                     </label>
                     <input
                         type="text"
-                        name="filename"
+                        name="fileName"
                         id="filename"
                         defaultValue={dataset.fileName}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
