@@ -55,7 +55,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         },
     });
 
-    return redirect(`/dashboard/datasets/${updatedDataset.id}`);
+    return redirect(`/dashboard/dp/datasets/${updatedDataset.id}`);
 };
 
 export default function EditDatasetPage() {

@@ -9,8 +9,62 @@ import FileUploader from './fileuploader';
 import DataGridDisplay from './DataGridDisplay';
 import Papa from 'papaparse';
 import DatasetStatistics from './DatasetStatistics';
-import AlgorithmSelector from './AlgorithmSelector';
+import AlgorithmSelectorRemix from './AlgorithmSelectorRemix';
 import { Box } from '@mui/material';
+import { ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node';
+import { requireUserId } from '~/session.server';
+import { getDatasetListItems } from '~/models/dataset.server';
+import { ActionFunction } from '@remix-run/node';
+import { createDataset } from '~/models/dataset.server';
+
+
+import { useLoaderData } from '@remix-run/react';
+
+export const action: ActionFunction = async ({ request }) => {
+    console.log('Action function called'); // Confirm the action function is being invoked
+    const userId = await requireUserId(request);
+    console.log('User ID:', userId); // Log the user ID
+
+    const formData = await request.formData();
+    console.log('All FormData:', Object.fromEntries(formData));
+    formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+    });
+    const file = formData.get('file');
+    const fileName = formData.get('filename');
+    const fileType = (formData.get("fileType") as string) || "csv";
+    const privacyBudget = formData.get('privacyBudget') || 1.0;
+
+    // Log the extracted data
+    console.log('File:', file);
+    console.log('FileName:', fileName);
+    console.log('FileType:', fileType);
+    console.log('PrivacyBudget:', privacyBudget);
+
+    if (!file || typeof fileName !== 'string' || !fileName) {
+        console.error('Validation failed: File and filename are required.');
+        return json({ error: 'File and filename are required.' }, { status: 400 });
+    }
+
+    const filePath = `/data/${fileName}`;
+    console.log('FilePath:', filePath); // Log the constructed file path
+
+    try {
+        const dataset = await createDataset({
+            fileName,
+            fileType,
+            filePath,
+            privacyBudget: Number(privacyBudget),
+            userId,
+        });
+
+        console.log('Dataset created:', dataset); // Log the created dataset
+        return json({ dataset });
+    } catch (error) {
+        console.error('Failed to create dataset:', error);
+        return json({ error: 'Failed to create dataset.' }, { status: 500 });
+    }
+};
 
 function Copyright(props: any) {
     return (
@@ -25,7 +79,13 @@ function Copyright(props: any) {
     );
 }
 
-function TabularDataView() {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+    const userId = await requireUserId(request);
+    const datasetListItems = await getDatasetListItems({ userId });
+    return json({ datasetListItems, userId });  // Include userId in the response
+};
+
+function Huh() {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [gridData, setGridData] = useState<any[]>([]);
@@ -37,6 +97,8 @@ function TabularDataView() {
     const [lowerClip, setLowerClip] = useState<number>(0); // State to hold lower clip value
     const [upperClip, setUpperClip] = useState<number>(5); // State to hold upper clip value
     const [selectedColumn, setSelectedColumn] = useState('');
+    const { datasetListItems, userId } = useLoaderData<typeof loader>();
+
 
     const handleColumnSelect = (columnName: string) => {
         setSelectedColumn(columnName);
@@ -187,7 +249,7 @@ function TabularDataView() {
                             height: 160,
                         }}
                     >
-                        {/* <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} /> */}
+                        <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} />
                     </Paper>
                 </Grid>
                 {/* AlgorithmSelector */}
@@ -201,7 +263,7 @@ function TabularDataView() {
                             justifyContent: 'space-between'
                         }}
                     >
-                        <AlgorithmSelector onAlgorithmSelect={handleAlgorithmSelect} onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} />
+                        <AlgorithmSelectorRemix datasetListItems={datasetListItems} onAlgorithmSelect={handleAlgorithmSelect} onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} />
                     </Paper>
                 </Grid>
                 {/* DataGrid */}
@@ -230,4 +292,4 @@ function TabularDataView() {
     );
 }
 
-export default TabularDataView;
+export default Huh;

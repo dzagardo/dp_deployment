@@ -21,7 +21,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { MainListItems, DataSetListItems } from './listItems';
-import FileUploader from './FileUploader';
+import FileUploader from './fileuploader';
 import DataGridDisplay from './DataGridDisplay';
 import Papa from 'papaparse';
 import DatasetStatistics from './DatasetStatistics';
@@ -102,7 +102,7 @@ function SyntheticDatasetView() {
                             height: 160,
                         }}
                     >
-                        <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} />
+                        {/* <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} /> */}
                     </Paper>
                 </Grid>
 

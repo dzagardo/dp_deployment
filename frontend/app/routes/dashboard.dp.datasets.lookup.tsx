@@ -27,15 +27,15 @@ const DatasetLookupPage = () => {
   return (
     <div>
       <h1>Select a Dataset</h1>
-      <div style={{ overflowY: 'auto', maxHeight: '400px', border: '1px solid #ccc' }}>
+      {/* <div style={{ overflowY: 'auto', maxHeight: '400px', border: '1px solid #ccc' }}>
         {datasets.map((dataset) => (
           <div key={dataset.id} style={{ padding: '10px', borderBottom: '1px solid #eee' }}>
-            <Link to={`/dashboard/datasets/${dataset.id}`} style={{ textDecoration: 'none' }}>
+            <Link to={`/dashboard/dp/datasets/${dataset.id}`} style={{ textDecoration: 'none' }}>
               {dataset.name}
             </Link>
           </div>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };

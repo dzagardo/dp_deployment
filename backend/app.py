@@ -94,46 +94,29 @@ def get_ratings(filename):
 
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
-    if 'file' not in request.files:
-        return "No file part", 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return "No selected file", 400
-    
-    # Define the path where you want to save the file
-    file_save_path = os.path.join('data', file.filename)
     try:
+        if 'file' not in request.files:
+            return "No file part", 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return "No selected file", 400
+
+        # Define the path where you want to save the file
+        file_save_path = os.path.join('data', file.filename)
+
         # Save the file to the filesystem in the data directory
         file.save(file_save_path)
         logging.info(f"File {file.filename} saved as {file_save_path}")
 
-        # Define dataset details (adjust these details as necessary)
-        dataset_details = {
-            "name": file.filename,
-            "filePath": file_save_path,
-            "privacyBudget": 1.0,  # Default or calculated value
-            "userId": "clphhvcof0000rrrankn3d4vn"  # Replace with actual user ID
-        }
-
-        # Call Node.js script to create a new dataset entry
-        result = subprocess.run(
-            ['node', '../frontend/scripts/prismaOperations.js', 'createDatasetForUser', json.dumps(dataset_details)],
-            capture_output=True, text=True
-        )
-
-        if result.returncode != 0:
-            # Handle errors from Node.js script
-            logging.error("Node.js script error: " + result.stderr)
-            return jsonify({"error": "Failed to create dataset entry"}), 500
-
-        # Parse the JSON output from the Node.js script
-        dataset = json.loads(result.stdout)
-        return jsonify({"message": "File and dataset uploaded successfully", "dataset": dataset}), 200
+        return jsonify({"message": "File and dataset uploaded successfully", "dataset": file_save_path}), 200
 
     except Exception as e:
-        logging.error(f"An error occurred while saving the file: {e}")
+        logging.error(f"An error occurred while processing the file: {str(e)}")
         return str(e), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
     
 @app.route('/generate_data/<algorithm_name>/<filename>', methods=['POST'])
 def generate_data(algorithm_name, filename):

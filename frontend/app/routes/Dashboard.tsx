@@ -22,6 +22,9 @@ import DashboardSMPC from './dashboard.smpc';
 import { requireUserId } from '~/session.server';
 import { createDataset } from '~/models/dataset.server';
 import { useLoaderData } from "@remix-run/react";
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import { Link } from 'react-router-dom';
 
 // Type for the loader data
 type LoaderData = {
@@ -94,7 +97,7 @@ export const action: ActionFunction = async ({ request }) => {
     });
 
     console.log(`Dataset created with ID: ${dataset.id}`);
-    return redirect(`/dashboard/datasets/${dataset.id}`);
+    return redirect(`/dashboard/dp/datasets/${dataset.id}`);
 
   } catch (error) {
     console.error('Failed to process the action:', error);
@@ -154,7 +157,10 @@ export default function Dashboard() {
   const [open, setOpen] = useState(true);
   const [currentView, setCurrentView] = useState('Differential Privacy');
   const { userId } = useLoaderData<LoaderData>(); // Specify the type of loader data
-
+  const [selectedTab, setSelectedTab] = React.useState(0);
+  const handleTabChange = (event: any, newValue: React.SetStateAction<number>) => {
+    setSelectedTab(newValue);
+  };
   // Render the current view based on state
   const renderCurrentView = () => {
     switch (currentView) {
@@ -213,6 +219,44 @@ export default function Dashboard() {
             >
               Dashboard
             </Typography>
+            {/* Here we add the Tabs */}
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              aria-label="Dashboard Tabs"
+              sx={{
+                marginLeft: 'auto',
+                '.MuiTab-root': { // Style for the default (non-selected) tabs
+                  color: 'dodgerblue', // Text color for the default tabs
+                  borderBottom: '3px solid white',
+                  borderTop: '2px solid white',
+                  borderLeft: '1px solid white',
+                  borderRight: '1px solid white',
+                  marginRight: '10px',
+                  '.MuiTabs-indicator': { // Hides the indicator
+                    display: 'none',
+                  },
+                  borderRadius: '10px',
+                  backgroundColor: 'white', // Background color for the default tabs
+                  '&:hover': {
+                    // backgroundColor: 'pink', // Optional: Change background on hover
+                  },
+                  '&.Mui-selected': { // Style for the selected tab
+                    color: 'black', // Text color for the selected tab
+                    backgroundColor: 'white', // Background color for the selected tab
+                    indicatorColor: 'none',
+                  },
+                }
+              }}
+            >
+              <Tab label="Tabular Data" component={Link} to="/dashboard/dp/tabulardata" />
+              <Tab label="TEST" component={Link} to="/dashboard/dp/huh" />
+              <Tab label="Image Data" component={Link} to="/dashboard/dp/imagedata" />
+              <Tab label="Synthetic Datasets" component={Link} to="/dashboard/dp/syntheticdatasets" />
+              <Tab label="Privacy Budgets" component={Link} to="/dashboard/dp/privacybudgets" />
+              <Tab label="Datasets Lookup" component={Link} to="/dashboard/dp/datasets/lookup" />
+              {/* ... add more tabs as needed */}
+            </Tabs>
             <form action={`/user/${userId}`} method="get">
               <Button type="submit" color="inherit">
                 Profile

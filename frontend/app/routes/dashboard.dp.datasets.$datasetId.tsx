@@ -40,8 +40,9 @@ export default function DatasetDetailsPage() {
       <h3 className="text-2xl font-bold">{dataset.fileName}</h3>
       <p className="py-2">File Type: {dataset.fileType}</p>
       <p className="py-2">Privacy Budget: {dataset.privacyBudget}</p>
-      {/* Add this line to display the file path */}
       <p className="py-2">File Path: {dataset.filePath}</p>
+      {/* Add this line to display the data owner */}
+      <p className="py-2">Data Owner: {dataset.user?.id || 'Unknown'}</p>
       <hr className="my-4" />
 
       {/* Container for the buttons */}
@@ -49,7 +50,7 @@ export default function DatasetDetailsPage() {
 
         {/* Edit Button */}
         <Link
-          to={`/dashboard/datasets/edit/${dataset.id}`}
+          to={`/dashboard/dp/datasets/edit/${dataset.id}`}
           className="inline-block rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 focus:bg-green-400"
         >
           Edit

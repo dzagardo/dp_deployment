@@ -14,9 +14,10 @@ function DashboardDP() {
   // Define the routes corresponding to each tab
   const tabRoutes = [
     '/dashboard/dp/tabulardata',
+    '/dashboard/dp/huh',
     '/dashboard/dp/imagedata',
     '/dashboard/dp/syntheticdatasets',
-    '/dashboard/dp/manage-privacy-budgets',
+    '/dashboard/dp/privacybudgets',
     '/dashboard/dp/datasets/lookup',
     // ... add more routes as needed
   ];
@@ -33,18 +34,8 @@ function DashboardDP() {
     // Ensuring that tabValue is not in the dependency array to avoid a loop
   }, [location, tabRoutes]);
 
-
   return (
     <Box component="main" sx={{ /* styles */ }}>
-      <Tabs value={tabValue} aria-label="Dashboard Tabs">
-        <Tab label="Generating Tabular Data" component={Link} to={tabRoutes[0]} />
-        <Tab label="Generating Image Data" component={Link} to={tabRoutes[1]} />
-        <Tab label="Manage Synthetic Datasets" component={Link} to={tabRoutes[2]} />
-        <Tab label="Manage Privacy Budgets" component={Link} to={tabRoutes[3]} />
-        <Tab label="Lookup Datasets" component={Link} to={tabRoutes[4]} />
-        {/* Add more tabs as needed */}
-      </Tabs>
-
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         {/* Render the content of the current route */}
         <Outlet />

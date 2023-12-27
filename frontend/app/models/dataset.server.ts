@@ -4,23 +4,32 @@ import { prisma } from "~/db.server";
 export async function getDataset({ id, userId }: { id: string; userId: string }) {
   const userDataset = await prisma.userDataset.findFirst({
     where: { userId, datasetId: id },
-    include: { dataset: true },
+    include: { dataset: true, user: true }, // Make sure to include the user here
   });
 
   if (!userDataset) {
     throw new Error("Dataset not found or you're not authorized to access this dataset");
   }
 
-  return userDataset.dataset;
+  return {
+    ...userDataset.dataset,
+    user: userDataset.user, // Include the user in the response
+  };
 }
 
 
 export function getDatasetListItems({ userId }: { userId: string }) {
   return prisma.userDataset.findMany({
     where: { userId },
-    select: { dataset: true },
+    include: {
+      dataset: true,
+      user: true, // Include user information here
+    },
     orderBy: { dataset: { updatedAt: "desc" } },
-  }).then(results => results.map(res => res.dataset));
+  }).then(results => results.map(res => ({
+    ...res.dataset,
+    user: res.user // Spread the dataset and include the user object
+  })));
 }
 
 export async function createDataset({

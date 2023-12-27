@@ -42,8 +42,11 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
       {/* Collapsible Section for Differential Privacy */}
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/tabulardata">
+        <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/tabulardata">
             <ListItemText primary="Generating Tabular Data" />
+          </ListItemButton>
+          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/huh">
+            <ListItemText primary="Generating Tabular Data TEST" />
           </ListItemButton>
           <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/imagedata">
             <ListItemText primary="Generating Image Data" />
@@ -117,22 +120,22 @@ export const secondaryListItems = (
 export const DataSetListItems = () => {
   const [datasets, setDatasets] = useState<string[]>([]);
 
-  useEffect(() => {
-    const fetchDatasets = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/list_files');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const files: string[] = await response.json();
-        setDatasets(files);
-      } catch (error) {
-        console.error('Failed to fetch datasets:', error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchDatasets = async () => {
+  //     try {
+  //       const response = await fetch('http://localhost:5000/list_files');
+  //       if (!response.ok) {
+  //         throw new Error('Network response was not ok');
+  //       }
+  //       const files: string[] = await response.json();
+  //       setDatasets(files);
+  //     } catch (error) {
+  //       console.error('Failed to fetch datasets:', error);
+  //     }
+  //   };
 
-    fetchDatasets();
-  }, []);
+  //   fetchDatasets();
+  // }, []);
 
   return (
     <React.Fragment>
@@ -140,7 +143,7 @@ export const DataSetListItems = () => {
         Data Sets
       </ListSubheader>
       {datasets.map((dataset, index) => (
-        <ListItemButton key={index} component={Link} to={`/dashboard/datasets/${dataset}`}>
+        <ListItemButton key={index} component={Link} to={`/dashboard/dp/datasets/${dataset}`}>
           <ListItemIcon>
             <AssignmentIcon />
           </ListItemIcon>

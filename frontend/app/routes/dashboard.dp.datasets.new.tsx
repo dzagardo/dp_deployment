@@ -37,7 +37,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         userId,
     });
 
-    return redirect(`/dashboard/datasets/${dataset.id}`);
+    return redirect(`/dashboard/dp/datasets/${dataset.id}`);
 };
 
 
