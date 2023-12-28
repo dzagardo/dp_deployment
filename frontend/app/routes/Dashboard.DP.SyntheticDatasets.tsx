@@ -37,8 +37,6 @@ interface Dataset {
 function SyntheticDatasetView() {
     // State to hold datasets and selected dataset details
     const [datasets, setDatasets] = useState<Dataset[]>([]);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
     // Fetch datasets when the component mounts
     useEffect(() => {
@@ -62,29 +60,6 @@ function SyntheticDatasetView() {
         // Call the fetch function
         fetchDatasets();
     }, []);
-
-    const handleFileUpload = async (file: File) => {
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await fetch('http://localhost:5000/upload_csv', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            console.log('File uploaded successfully');
-            setUploadedFile(file);
-        } catch (error) {
-            console.error('Upload failed:', error);
-        } finally {
-            setIsUploading(false);
-        }
-    };
 
     return (
         <Container maxWidth="lg">

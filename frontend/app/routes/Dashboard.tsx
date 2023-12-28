@@ -250,11 +250,10 @@ export default function Dashboard() {
               }}
             >
               <Tab label="Tabular Data" component={Link} to="/dashboard/dp/tabulardata" />
-              <Tab label="TEST" component={Link} to="/dashboard/dp/huh" />
               <Tab label="Image Data" component={Link} to="/dashboard/dp/imagedata" />
               <Tab label="Synthetic Datasets" component={Link} to="/dashboard/dp/syntheticdatasets" />
-              <Tab label="Privacy Budgets" component={Link} to="/dashboard/dp/privacybudgets" />
-              <Tab label="Datasets Lookup" component={Link} to="/dashboard/dp/datasets/lookup" />
+              <Tab label="Statistics" component={Link} to="/dashboard/dp/statistics" />
+              <Tab label="Dataset Management" component={Link} to="/dashboard/dp/datasets/management" />
               {/* ... add more tabs as needed */}
             </Tabs>
             <form action={`/user/${userId}`} method="get">

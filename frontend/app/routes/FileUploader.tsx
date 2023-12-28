@@ -78,7 +78,7 @@ export default function FileUploader({ isUploading }: FileUploaderProps) {
       try {
         // Send the file to the server for upload
 
-        const response = await fetch('/dashboard/dp/huh', {
+        const response = await fetch('/dashboard/dp/tabulardata', {
           method: 'POST',
           body: formData,
         });

@@ -9,8 +9,70 @@ import FileUploader from './fileuploader';
 import DataGridDisplay from './DataGridDisplay';
 import Papa from 'papaparse';
 import DatasetStatistics from './DatasetStatistics';
-import AlgorithmSelector from './AlgorithmSelector';
+import AlgorithmSelectorRemix from './AlgorithmSelectorRemix';
 import { Box } from '@mui/material';
+import { ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node';
+import { requireUserId } from '~/session.server';
+import { getDatasetListItems } from '~/models/dataset.server';
+import { ActionFunction } from '@remix-run/node';
+import { createDataset } from '~/models/dataset.server';
+
+
+import { useLoaderData } from '@remix-run/react';
+
+export const action: ActionFunction = async ({ request }) => {
+    console.log('Action function called');
+    const userId = await requireUserId(request);
+
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const privacyBudget = formData.get('privacyBudget') || '1.0';
+
+    if (!file || file.name === '') {
+        console.error('Validation failed: File and filename are required.');
+        return json({ error: 'File and filename are required.' }, { status: 400 });
+    }
+
+    // Prepare the form data to send to Flask backend
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('privacyBudget', privacyBudget);
+
+    try {
+        // Send the file to the Flask backend for upload
+        const uploadResponse = await fetch('http://localhost:5000/upload_csv', {
+            method: 'POST',
+            body: uploadFormData,
+        });
+
+        if (!uploadResponse.ok) {
+            // Handle server errors
+            console.error('Server error during file upload:', uploadResponse.statusText);
+            const errorText = await uploadResponse.text();
+            return json({ error: 'Failed to upload file.' }, { status: uploadResponse.status });
+        }
+
+        // Extract the actual saved file name from Flask backend response
+        const uploadData = await uploadResponse.json();
+        const actualSavedFileName = uploadData.fileName;
+        const filePath = uploadData.filePath;
+
+        // Now create the dataset entry with the actual saved file name
+        const dataset = await createDataset({
+            fileName: actualSavedFileName,
+            fileType: file.type || 'text/csv',
+            filePath,
+            privacyBudget: Number(privacyBudget),
+            userId,
+        });
+
+        console.log('Dataset created:', dataset);
+        return json({ dataset });
+    } catch (error) {
+        console.error('Failed to create dataset:', error);
+        return json({ error: 'Failed to create dataset.' }, { status: 500 });
+    }
+};
 
 function Copyright(props: any) {
     return (
@@ -25,18 +87,24 @@ function Copyright(props: any) {
     );
 }
 
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+    const userId = await requireUserId(request);
+    const datasetListItems = await getDatasetListItems({ userId });
+    return json({ datasetListItems, userId });  // Include userId in the response
+};
+
 function TabularDataView() {
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [gridData, setGridData] = useState<any[]>([]);
     const [selectedFile, setSelectedFile] = useState('');
     const [ratings, setRatings] = useState<number[]>([]); // State to hold ratings data
     const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>(''); // State to hold selected algorithm
     const [epsilon, setEpsilon] = useState<number>(1.0);
     const [delta, setDelta] = useState<number>(1e-5);
-    const [lowerClip, setLowerClip] = useState<number>(0); // State to hold lower clip value
-    const [upperClip, setUpperClip] = useState<number>(5); // State to hold upper clip value
+    const [lowerClip, setLowerClip] = useState<number | ''>('');
+    const [upperClip, setUpperClip] = useState<number | ''>('');
     const [selectedColumn, setSelectedColumn] = useState('');
+    const { datasetListItems, userId } = useLoaderData<typeof loader>();
+
 
     const handleColumnSelect = (columnName: string) => {
         setSelectedColumn(columnName);
@@ -54,29 +122,6 @@ function TabularDataView() {
         setDelta(deltaValue);
         setLowerClip(lowerClipValue);
         setUpperClip(upperClipValue);
-    };
-
-    const handleFileUpload = async (file: File) => {
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await fetch('http://localhost:5000/upload_csv', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            console.log('File uploaded successfully');
-            setUploadedFile(file);
-        } catch (error) {
-            console.error('Upload failed:', error);
-        } finally {
-            setIsUploading(false);
-        }
     };
 
     const onSelectFile = async (filename: string) => {
@@ -120,6 +165,13 @@ function TabularDataView() {
         }
         if (filename.trim() !== '') {
             try {
+                console.log('Sending data with:', {
+                    epsilon: epsilon,
+                    delta: delta,
+                    lowerClip: lowerClip,
+                    upperClip: upperClip,
+                    column_name: selectedColumn
+                });
                 const response = await fetch(`http://localhost:5000/generate_data/${selectedAlgorithm}/${encodeURIComponent(filename)}`, {
                     method: 'POST',
                     headers: {
@@ -140,7 +192,29 @@ function TabularDataView() {
 
                 const result = await response.json();
                 console.log('Synthetic data generation result:', result);
-                // Handle the result as needed
+
+                const formData = new FormData();
+                formData.append('filename', result.file_name);
+                formData.append('filePath', result.file_path);
+                formData.append('privacyBudget', String(epsilon));  // FormData expects strings
+                formData.append('fileType', 'csv');
+
+                // Assuming result contains the filename and filePath
+                // Now post to your Remix action to create a new dataset
+                const newDatasetResponse = await fetch('/dashboard/dp/datasets/new', {
+                    method: 'POST',
+                    body: formData  // Send FormData instead of JSON
+                });
+
+                if (!newDatasetResponse.ok) {
+                    // Handle the error
+                    const errorText = await newDatasetResponse.text();
+                    console.error('Error creating new dataset:', errorText);
+                } else {
+                    const newDatasetResult = await newDatasetResponse.json();
+                    console.log('New dataset created:', newDatasetResult);
+                }
+
             } catch (error) {
                 console.error('Error generating synthetic data:', error);
             }
@@ -177,19 +251,6 @@ function TabularDataView() {
                 </Paper>
             </Box>
             <Grid container spacing={2}> {/* Adjusted spacing */}
-                {/* FileUploader */}
-                <Grid item xs={12} md={8} lg={12}>
-                    <Paper
-                        sx={{
-                            p: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            height: 160,
-                        }}
-                    >
-                        {/* <FileUploader onFileUploaded={handleFileUpload} isUploading={isUploading} /> */}
-                    </Paper>
-                </Grid>
                 {/* AlgorithmSelector */}
                 <Grid item xs={12} md={8} lg={12}>
                     <Paper
@@ -201,7 +262,7 @@ function TabularDataView() {
                             justifyContent: 'space-between'
                         }}
                     >
-                        <AlgorithmSelector onAlgorithmSelect={handleAlgorithmSelect} onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} />
+                        <AlgorithmSelectorRemix datasetListItems={datasetListItems} onAlgorithmSelect={handleAlgorithmSelect} onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} />
                     </Paper>
                 </Grid>
                 {/* DataGrid */}

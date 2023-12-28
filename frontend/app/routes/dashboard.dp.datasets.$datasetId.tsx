@@ -40,8 +40,6 @@ export default function DatasetDetailsPage() {
       <h3 className="text-2xl font-bold">{dataset.fileName}</h3>
       <p className="py-2">File Type: {dataset.fileType}</p>
       <p className="py-2">Privacy Budget: {dataset.privacyBudget}</p>
-      <p className="py-2">File Path: {dataset.filePath}</p>
-      {/* Add this line to display the data owner */}
       <p className="py-2">Data Owner: {dataset.user?.id || 'Unknown'}</p>
       <hr className="my-4" />
 

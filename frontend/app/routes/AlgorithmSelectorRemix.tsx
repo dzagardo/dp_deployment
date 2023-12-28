@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Select, MenuItem, SelectChangeEvent, TextField, InputAdornment, Button } from '@mui/material';
 import Papa from 'papaparse';
-import { useLoaderData } from "@remix-run/react";
-import { getDatasetListItems } from "~/models/dataset.server"; // Adjust this import to your actual function
-import { requireUserId } from "~/session.server";
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-import { Form, Link, NavLink, Outlet } from "@remix-run/react";
 
 interface AlgorithmSelectorProps {
   datasetListItems: any[]; // Define the correct type based on your data
@@ -23,7 +17,7 @@ const AlgorithmSelectorRemix: React.FC<AlgorithmSelectorProps> = ({ datasetListI
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
   const [epsilon, setEpsilon] = useState<number>(1.0);
   const [delta, setDelta] = useState<number>(1e-5);
-  const [lowerClip, setLowerClip] = useState<number>(0);
+  const [lowerClip, setLowerClip] = useState<number>(1);
   const [upperClip, setUpperClip] = useState<number>(5);
   const [selectedFile, setFileSelection] = useState<string>(''); // Renamed this line
   const [fileList, setFileList] = useState<string[]>([]);

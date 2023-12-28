@@ -193,7 +193,8 @@ def generate_data(algorithm_name, filename):
 
         return jsonify({
             "message": "Data with synthetic values generated successfully.",
-            "file_path": modified_file_path
+            "file_path": modified_file_path,
+            "file_name": modified_file_name
         }), 200
 
     except Exception as e:
@@ -280,55 +281,15 @@ def validate_budget(budget):
     except ValueError:
         return False
 
-def update_budget_in_db(dataset_id, new_budget):
-    try:
-        print(dataset_id)
-        print(new_budget)
-        # Construct the command to run the Node.js script with the necessary arguments
-        command = ['ts-node', '../frontend/scripts/prismaOperations.js', 'updatePrivacyBudgetForDataset', dataset_id, str(new_budget)]
-
-        # Run the Node.js script
-        result = subprocess.run(command, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            # If the Node.js script returned an error, log it and return a response
-            error_message = "Node.js script error: " + result.stderr
-            logging.error(error_message)
-            return jsonify({"error": error_message}), 500
-
-        # If the script was successful, parse the output (if needed) and return a success message
-        # This assumes your Node.js script returns a confirmation message or the updated dataset
-        updated_dataset = json.loads(result.stdout)
-        return jsonify({"message": "Privacy budget updated successfully", "dataset": updated_dataset}), 200
-
-    except Exception as e:
-        # Log any exceptions that occur and return an error response
-        error_message = f"An error occurred during the update: {e}"
-        logging.error(error_message)
-        return jsonify({"error": error_message}), 500
-
 @app.route('/api/datasets', methods=['GET'])
 def list_datasets():
+    data_directory = './data'
     try:
-        # Call the Node.js script with the 'listDatasets' command
-        result = subprocess.run(['ts-node', '../frontend/scripts/prismaOperations.js', 'listDatasets'], capture_output=True, text=True)
-
-        if result.returncode != 0:
-            # Log the error from the Node.js script and return a response
-            error_message = "Node.js script error: " + result.stderr
-            logging.error(error_message)
-            return jsonify({"error": error_message}), 500
-
-        # Parse the JSON output from the Node.js script
-        datasets = json.loads(result.stdout)
-
+        # List all files in the data directory
+        datasets = [f for f in os.listdir(data_directory) if os.path.isfile(os.path.join(data_directory, f))]
         return jsonify(datasets), 200
-
     except Exception as e:
-        # Log the detailed exception and return a response
-        error_message = f"An error occurred while listing datasets: {e}"
-        logging.error(error_message)
-        return jsonify({"error": error_message}), 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/rename_file', methods=['POST'])
 def rename_file():

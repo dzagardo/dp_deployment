@@ -45,16 +45,13 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
         <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/tabulardata">
             <ListItemText primary="Generating Tabular Data" />
           </ListItemButton>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/huh">
-            <ListItemText primary="Generating Tabular Data TEST" />
-          </ListItemButton>
           <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/imagedata">
             <ListItemText primary="Generating Image Data" />
           </ListItemButton>
           <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/syntheticdatasets">
             <ListItemText primary="Manage Synthetic Datasets" />
           </ListItemButton>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/privacybudgets">
+          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/statistics">
             <ListItemText primary="Manage Privacy Budgets" />
           </ListItemButton>
           <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/datasets/lookup">

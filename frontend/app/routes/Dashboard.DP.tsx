@@ -17,7 +17,7 @@ function DashboardDP() {
     '/dashboard/dp/huh',
     '/dashboard/dp/imagedata',
     '/dashboard/dp/syntheticdatasets',
-    '/dashboard/dp/privacybudgets',
+    '/dashboard/dp/statistics',
     '/dashboard/dp/datasets/lookup',
     // ... add more routes as needed
   ];

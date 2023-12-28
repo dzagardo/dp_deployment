@@ -25,6 +25,16 @@ export default function DatasetView() {
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            {/* Datasets Lookup Title */}
+            <Typography variant="h4" component="h1" sx={{
+                // fontWeight: 'bold',
+                marginBottom: 2,
+                // color: 'primary.main',
+                // textTransform: 'uppercase',
+                letterSpacing: 1,
+            }}>
+                Dataset Management
+            </Typography>
             <Grid container spacing={3}>
                 {/* FileUploader */}
                 <Grid item xs={12} md={4} lg={3}>
@@ -37,6 +47,18 @@ export default function DatasetView() {
                 <Grid item xs={12} md={8} lg={9}>
                     <Paper elevation={3} sx={{ p: 2, height: 'calc(50vh - 96px)', overflow: 'hidden' }}>
                         <Box sx={{ maxHeight: 'calc(50vh - 96px)', overflowY: 'auto' }}>
+                            {/* Dataset List Header */}
+                            <Typography variant="h6" component="div" sx={{
+                                fontWeight: 'medium',
+                                padding: 2,
+                                backgroundColor: 'secondary.main',
+                                color: 'common.white',
+                                borderRadius: 1,
+                                textAlign: 'center',
+                                boxShadow: 1,
+                            }}>
+                                Available Datasets
+                            </Typography>
                             {datasetListItems.length === 0 ? (
                                 <Typography variant="h6" gutterBottom>
                                     No datasets yet
@@ -60,7 +82,6 @@ export default function DatasetView() {
                         </Box>
                     </Paper>
                 </Grid>
-
 
                 {/* Main Content Area */}
                 <Grid item xs={12}>
