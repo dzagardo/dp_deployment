@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { json, redirect, ActionFunction, LoaderFunction } from '@remix-run/node';
 import Button from '@mui/material/Button';
-import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiDrawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
@@ -150,9 +150,6 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-// TODO remove, this demo shouldn't need to reset the theme.
-const defaultTheme = createTheme();
-
 export default function Dashboard() {
   const [open, setOpen] = useState(true);
   const [currentView, setCurrentView] = useState('Differential Privacy');
@@ -189,7 +186,6 @@ export default function Dashboard() {
   };
 
   return (
-    <ThemeProvider theme={defaultTheme}>
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
         <AppBar position="absolute" open={open}>
@@ -252,7 +248,7 @@ export default function Dashboard() {
               <Tab label="Tabular Data" component={Link} to="/dashboard/dp/tabulardata" />
               <Tab label="Image Data" component={Link} to="/dashboard/dp/imagedata" />
               <Tab label="Synthetic Datasets" component={Link} to="/dashboard/dp/syntheticdatasets" />
-              <Tab label="Statistics" component={Link} to="/dashboard/dp/statistics" />
+              <Tab label="Statistics" component={Link} to="/dashboard/dp/statistics/management" />
               <Tab label="Dataset Management" component={Link} to="/dashboard/dp/datasets/management" />
               {/* ... add more tabs as needed */}
             </Tabs>
@@ -304,6 +300,5 @@ export default function Dashboard() {
           {renderCurrentView()}
         </Box>
       </Box>
-    </ThemeProvider>
   );
 }

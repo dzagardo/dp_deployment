@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, send_file, session
 import subprocess
 import json
 import pandas as pd
+import numpy as np
 from opacus import PrivacyEngine
 import tensorflow as tf
 import io
@@ -66,17 +67,20 @@ def get_file(filename):
     
 @app.route('/get_column_names/<filename>', methods=['GET'])
 def get_column_names(filename):
-    file_path = os.path.join('data', filename)
     try:
+        file_path = os.path.join('./data/', filename)
+
         if os.path.isfile(file_path):
             data = pd.read_csv(file_path)
             column_names = data.columns.tolist()  # Extract column names
             return jsonify(column_names), 200
         else:
+            print("File not found:", file_path)
             return jsonify({"error": "File not found"}), 404
     except Exception as e:
         logging.error(f"An error occurred while retrieving column names: {e}")
         return jsonify({"error": str(e)}), 500
+
     
 @app.route('/get_ratings/<filename>', methods=['GET'])
 def get_ratings(filename):
@@ -93,6 +97,8 @@ def get_ratings(filename):
         logging.error(f"An error occurred while retrieving the ratings: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     try:
@@ -103,15 +109,22 @@ def upload_csv():
         if file.filename == '':
             return "No selected file", 400
 
-        # Generate a unique identifier
-        unique_id = uuid.uuid4().hex
-
-        # Split the file name to add the unique identifier
+        # Define the directory where you want to save the file
+        save_directory = 'data'
         name, ext = os.path.splitext(file.filename)
-        unique_filename = f"{name}_{unique_id}{ext}"
+        
+        # Initialize the counter and unique filename
+        counter = 1
+        unique_filename = f"{name}{ext}"
 
         # Define the path where you want to save the file
-        file_save_path = os.path.join('data', unique_filename)
+        file_save_path = os.path.join(save_directory, unique_filename)
+
+        # Loop to find a filename that is not already taken
+        while os.path.exists(file_save_path):
+            unique_filename = f"{name}({counter}){ext}"
+            file_save_path = os.path.join(save_directory, unique_filename)
+            counter += 1
 
         # Save the file to the filesystem in the data directory
         file.save(file_save_path)
@@ -119,7 +132,7 @@ def upload_csv():
 
         # Flask backend pseudo-code
         return jsonify({
-            "message": "File and dataset uploaded successfully",
+            "message": "File uploaded successfully",
             "fileName": unique_filename,  # The actual saved file name
             "filePath": file_save_path
         }), 200
@@ -137,8 +150,8 @@ def generate_data(algorithm_name, filename):
         data = request.get_json()
         epsilon = data.get('epsilon', 1.0)
         delta = data.get('delta', 1e-5)
-        upper_clip = data.get('upper_clip', 5)
-        lower_clip = data.get('lower_clip', 0)
+        upper_clip = data.get('lowerClip', 5)
+        lower_clip = data.get('upperClip', 0)
         column_name = data.get('column_name')  # This is the new parameter for the column name
 
         # Sanitize epsilon and delta by replacing dots with underscores
@@ -305,10 +318,6 @@ def rename_file():
         original_full_path = os.path.join(original_file_path)
         new_full_path = os.path.join('./data/', new_file_name)
 
-        print(new_full_path);
-        print(new_file_name);
-        print(original_full_path);
-
         logging.info(f"Attempting to rename: {original_full_path} to {new_full_path}")
 
         if os.path.exists(original_full_path):
@@ -340,8 +349,6 @@ def delete_file():
 
         logging.info(f"Attempting to delete: {full_file_path}")
 
-        print(full_file_path)
-
         # Checking if the file exists and deleting it
         if os.path.exists(full_file_path):
             os.remove(full_file_path)
@@ -354,6 +361,58 @@ def delete_file():
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+# Function to simulate the calculation of a noisy statistic
+def calculate_noisy_statistic(data, column, epsilon):
+    # This is a placeholder function. Replace with your differential privacy implementation.
+    # For demonstration purposes, it just returns the actual mean plus some noise.
+    actual_value = data[column].mean()
+    noise = np.random.laplace(0, 1/epsilon)  # simplistic differential privacy noise
+    noisy_value = actual_value + noise
+    return noisy_value
+
+@app.route('/get_noisy/<operation>', methods=['POST'])
+def get_noisy_statistic(operation):
+    # Extracting data from the request
+    data = request.json
+    privacy_budget = float(data['privacyBudget'])
+    file_name = data['fileName']
+    column_name = data['columnName']
+
+    # Load the dataset (ensure proper error handling in your actual code)
+    file_path = os.path.join('data', file_name)  # Adjust the path as necessary
+    df = pd.read_csv(file_path)
+
+    # Calculate the noisy statistic based on the operation
+    epsilon_loss = 0.1  # This is a placeholder for the amount of epsilon used in the calculation
+    if operation == 'mean':
+        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
+    elif operation == 'median':
+        # Placeholder for median calculation
+        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
+    elif operation == 'mode':
+        # Placeholder for mode calculation
+        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
+    elif operation == 'min':
+        # Placeholder for min calculation
+        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
+    elif operation == 'max':
+        # Placeholder for max calculation
+        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
+    else:
+        return jsonify({"error": "Invalid operation"}), 400
+
+    # Update the privacy budget (ensure it doesn't go below zero)
+    new_privacy_budget = max(privacy_budget - epsilon_loss, 0)
+
+    # Print statement for the quantified amount of privacy loss
+    print(f"Privacy loss (epsilon reduction): {epsilon_loss}")
+
+    # Return the new privacy budget and the calculated noisy statistic
+    return jsonify({
+        "updatedPrivacyBudget": new_privacy_budget,
+        "statisticValue": statistic_value
+    })
 
 if __name__ == '__main__':
     app.run(debug=False)  # Ensure debug mode is set to False here

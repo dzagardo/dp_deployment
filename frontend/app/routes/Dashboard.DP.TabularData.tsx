@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+// import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
@@ -189,7 +189,7 @@ function TabularDataView() {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-
+                
                 const result = await response.json();
                 console.log('Synthetic data generation result:', result);
 

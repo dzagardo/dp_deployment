@@ -14,7 +14,6 @@ function DashboardDP() {
   // Define the routes corresponding to each tab
   const tabRoutes = [
     '/dashboard/dp/tabulardata',
-    '/dashboard/dp/huh',
     '/dashboard/dp/imagedata',
     '/dashboard/dp/syntheticdatasets',
     '/dashboard/dp/statistics',

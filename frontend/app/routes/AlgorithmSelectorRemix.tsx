@@ -17,8 +17,8 @@ const AlgorithmSelectorRemix: React.FC<AlgorithmSelectorProps> = ({ datasetListI
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
   const [epsilon, setEpsilon] = useState<number>(1.0);
   const [delta, setDelta] = useState<number>(1e-5);
-  const [lowerClip, setLowerClip] = useState<number>(1);
-  const [upperClip, setUpperClip] = useState<number>(5);
+  const [lowerClip, setLowerClip] = useState<number | ''>('');
+  const [upperClip, setUpperClip] = useState<number | ''>('');
   const [selectedFile, setFileSelection] = useState<string>(''); // Renamed this line
   const [fileList, setFileList] = useState<string[]>([]);
   const [columnNames, setColumnNames] = useState<string[]>([]);
@@ -45,7 +45,12 @@ const AlgorithmSelectorRemix: React.FC<AlgorithmSelectorProps> = ({ datasetListI
   const handleAlgorithmChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     setSelectedAlgorithm(value);
-    onAlgorithmSelect(value, epsilon, delta, lowerClip, upperClip);
+
+    // Coerce to number, with 0 as fallback for empty strings
+    const lowerClipNumber = lowerClip !== '' ? +lowerClip : Number.MIN_SAFE_INTEGER;
+    const upperClipNumber = upperClip !== '' ? +upperClip : Number.MAX_SAFE_INTEGER;
+
+    onAlgorithmSelect(value, epsilon, delta, lowerClipNumber, upperClipNumber);
   };
 
   const handleEpsilonChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,7 +134,7 @@ const AlgorithmSelectorRemix: React.FC<AlgorithmSelectorProps> = ({ datasetListI
               {/* Safely map over datasetListItems */}
               {datasetListItems && datasetListItems.map((item) => (
                 <MenuItem key={item.id} value={item.fileName}>
-                  📊 {item.fileName} (User: {item.user?.id})
+                  📊 {item.fileName}
                 </MenuItem>
               ))}
             </Select>
