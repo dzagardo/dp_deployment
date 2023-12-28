@@ -68,14 +68,7 @@ export const action: ActionFunction = async ({ params, request }) => {
 
 export default function DatasetStatistics() {
     const { dataset, columnNames } = useLoaderData<typeof loader>();
-    const [calculationResult, setCalculationResult] = useState<string | number | null>(null);
-    const [selectedColumn, setSelectedColumn] = useState('');
     const navigate = useNavigate();
-
-    // Correctly typed event handler for an HTML select element
-    const handleColumnChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedColumn(event.target.value);
-    };
 
     return (
         <ThemeProvider theme={theme}>
@@ -85,25 +78,6 @@ export default function DatasetStatistics() {
                 <p className="py-2">Privacy Budget: {dataset.privacyBudget}</p>
                 <p className="py-2">Data Owner: {dataset.user?.id || 'Unknown'}</p>
                 <hr className="my-4" />
-                <div style={{ fontSize: '48px', margin: '32px 0' }}> {/* Adjust the font size and margin as needed */}
-                    Calculation Result: {calculationResult !== null && typeof calculationResult === 'number'
-                        ? calculationResult.toFixed(2)
-                        : calculationResult}
-                </div>
-
-                <select
-                    id="column-select"
-                    value={selectedColumn}
-                    onChange={handleColumnChange}
-                    style={{ width: '100%', padding: '8px', marginBottom: '20px' }} // Adjust the styling as needed
-                >
-                    <option value="">Select a column</option>
-                    {columnNames.map((columnName: string) => (
-                        <option key={columnName} value={columnName}>
-                            {columnName}
-                        </option>
-                    ))}
-                </select>
 
                 <div style={{ display: 'flex', gap: '16px' }}>
                     <ListItemButton onClick={() => navigate(`/dashboard/dp/statistics/${dataset.id}/mean`)} style={{ backgroundColor: '#1976D2', color: 'white' }}>
@@ -124,7 +98,8 @@ export default function DatasetStatistics() {
                 </div>
 
             </div>
-            {/* Third Row: Main Content Area */}
+
+            {/* Second Row: Main Content Area for Child Routes */}
             <Outlet />
         </ThemeProvider>
 

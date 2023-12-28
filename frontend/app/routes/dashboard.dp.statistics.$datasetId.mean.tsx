@@ -1,7 +1,7 @@
 // File: dashboard.dp.statistics.mean.$datasetId.tsx
 
 import React, { useState } from "react";
-import { json, LoaderFunctionArgs, ActionFunctionArgs, LoaderFunction } from "@remix-run/node";
+import { json, LoaderFunctionArgs, ActionFunctionArgs, LoaderFunction, redirect } from "@remix-run/node";
 import { useLoaderData, Form } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
@@ -35,8 +35,13 @@ export const loader: LoaderFunction = async ({ params, request }) => {
         console.error('Failed to fetch column names:', error);
     }
 
-    // Return both dataset and column names
-    return json({ dataset, columnNames });
+    // Capture action return data
+    const url = new URL(request.url);
+    const result = url.searchParams.get("result");
+    const updatedPrivacyBudget = url.searchParams.get("updatedPrivacyBudget");
+
+    console.log(result, updatedPrivacyBudget);
+    return json({ dataset, columnNames, result, updatedPrivacyBudget });
 };
 
 // Define the action function for handling statistics calculations
@@ -51,9 +56,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     // Assuming the dataset object is retrieved in the loader function and available here
     const dataset = await getDataset({ id: params.datasetId, userId });
-
     // Function to handle statistics calculations and interact with the backend
-    const handleCalculateStatistics = async (operation: string, selectedColumn: string, dataset: any) => {
+    const handleCalculateStatistics = async (userId: string, operation: string, selectedColumn: string, dataset: any) => {
         if (!selectedColumn || !dataset) {
             console.error('Selected column or dataset is not defined');
             return null;
@@ -76,7 +80,10 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
             });
 
             if (response.ok) {
+
                 const result = await response.json();
+                console.log(result);
+
                 const updatedPrivacyBudget = result.updatedPrivacyBudget;
 
                 // Update the privacy budget in the dataset
@@ -90,7 +97,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
                 });
 
                 console.log(`Updated Privacy Budget: ${updatedPrivacyBudget}`);
-                return result.statisticValue; // You might want to return more data
+                // Return both values here
+                return { statisticValue: result.statisticValue, updatedPrivacyBudget };
             } else {
                 console.error(`Failed to fetch statistic, status: ${response.status}`);
                 return null;
@@ -101,14 +109,14 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         }
     };
 
-    const result = await handleCalculateStatistics(operation, selectedColumn, dataset);
+    const { statisticValue, updatedPrivacyBudget } = await handleCalculateStatistics(userId, operation, selectedColumn, dataset) || {};
 
     // Return the result or an appropriate message back to the client
-    return json({ message: "Statistics calculated successfully", result });
+    return redirect(`/dashboard/dp/statistics/${params.datasetId}/mean?result=${statisticValue}&updatedPrivacyBudget=${updatedPrivacyBudget}`);
 };
 
 export default function StatisticsPage() {
-    const { dataset, columnNames } = useLoaderData<typeof loader>();
+    const { dataset, columnNames, result, message } = useLoaderData<typeof loader>();
     const [calculationResult, setCalculationResult] = useState(null);
     const [selectedColumn, setSelectedColumn] = useState('');
 
@@ -126,10 +134,6 @@ export default function StatisticsPage() {
 
     return (
         <div>
-            <h3 className="text-2xl font-bold">{dataset.fileName}</h3>
-            <p className="py-2">File Type: {dataset.fileType}</p>
-            <p className="py-2">Privacy Budget: {dataset.privacyBudget}</p>
-            <p className="py-2">Data Owner: {dataset.user?.id || 'Unknown'}</p>
             <hr className="my-4" />
             <Form method="post" onSubmit={handleSubmit} className="space-y-6">
                 {/* Input for selecting operation */}
@@ -184,8 +188,17 @@ export default function StatisticsPage() {
                 </div>
             </Form>
 
-            {/* Display results and any messages */}
-            {calculationResult && <p>Result: {calculationResult}</p>}
+            {/* Display calculated statistic and updated privacy budget */}
+            {result && (
+                <p>
+                    <strong>Calculated Statistic:</strong> {result}
+                </p>
+            )}
+            {message && (
+                <p>
+                    <strong>Message:</strong> {message}
+                </p>
+            )}
         </div>
     );
 }
