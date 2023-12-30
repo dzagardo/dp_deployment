@@ -7,6 +7,8 @@ import invariant from "tiny-invariant";
 
 import { getDataset, updateDataset } from "~/models/dataset.server"; // Adjust this import as necessary
 import { requireUserId } from "~/session.server";
+import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import AlgorithmSelectorRemix from "./AlgorithmSelectorRemix";
 
 export const loader: LoaderFunction = async ({ params, request }) => {
     const userId = await requireUserId(request);
@@ -46,7 +48,6 @@ export const loader: LoaderFunction = async ({ params, request }) => {
 
 // Define the action function for handling statistics calculations
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-    console.log("here");
     const userId = await requireUserId(request);
     invariant(params.datasetId, "datasetId not found");
 
@@ -64,11 +65,15 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         }
 
         const url = `http://localhost:5000/get_noisy/${operation}`;
+
         const data = {
             privacyBudget: dataset.privacyBudget,
             fileName: dataset.fileName,
             columnName: selectedColumn,
+            totalQueries: dataset.totalQueries,
         };
+
+        console.log(data);
 
         try {
             const response = await fetch(url, {
@@ -86,14 +91,16 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
                 const updatedPrivacyBudget = result.updatedPrivacyBudget;
 
-                // Update the privacy budget in the dataset
+                // Update the privacy budget and increment the totalQueries in the dataset
                 const updatedDataset = await updateDataset({
                     id: dataset.id,
                     userId,
                     data: {
-                        fileName: dataset.fileName,
-                        privacyBudget: updatedPrivacyBudget,
+                        fileName: dataset.fileName, // Keep existing fileName
+                        privacyBudget: result.updatedPrivacyBudget, // Update the privacy budget
+                        totalQueries: dataset.totalQueries + 1, // Increment the totalQueries
                     },
+                    resetQueries: false // Indicate not to reset the totalQueries
                 });
 
                 console.log(`Updated Privacy Budget: ${updatedPrivacyBudget}`);
@@ -112,14 +119,20 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     const { statisticValue, updatedPrivacyBudget } = await handleCalculateStatistics(userId, operation, selectedColumn, dataset) || {};
 
     // Return the result or an appropriate message back to the client
-    return redirect(`/dashboard/dp/statistics/${params.datasetId}/mean?result=${statisticValue}&updatedPrivacyBudget=${updatedPrivacyBudget}`);
+    return redirect(`/dashboard/dp/statistics/${params.datasetId}/calculate?result=${statisticValue}&updatedPrivacyBudget=${updatedPrivacyBudget}`);
 };
 
 export default function StatisticsPage() {
     const { dataset, columnNames, result, message } = useLoaderData<typeof loader>();
     const [calculationResult, setCalculationResult] = useState(null);
     const [selectedColumn, setSelectedColumn] = useState('');
+    const operations = ["mean", "median", "mode", "min", "max"];
+    const [selectedOperation, setSelectedOperation] = useState(operations[0]);
 
+    // Function to handle the selection of an operation
+    const handleSelectOperation = (operation: string) => {
+        setSelectedOperation(operation);
+    };
     // Function to handle form submission
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         console.log("handleSubmit");

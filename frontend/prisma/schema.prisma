@@ -38,12 +38,13 @@ model Note {
 model Dataset {
   id            String       @id @default(cuid())
   fileName      String       // name
-  filePath      String       // Add this line for the file path
+  filePath      String       // file path
   fileType      String       @default("csv")
   privacyBudget Float        @default(0) // privacy_budget
+  totalQueries  Int          @default(0) // Total number of queries performed on this dataset
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  userDatasets  UserDataset[] // New relation to UserDataset
+  userDatasets  UserDataset[] // Relation to UserDataset
 }
 
 // New junction table for User-Dataset many-to-many relationship

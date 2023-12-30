@@ -362,57 +362,56 @@ def delete_file():
         logging.error(f"An error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-# Function to simulate the calculation of a noisy statistic
-def calculate_noisy_statistic(data, column, epsilon):
-    # This is a placeholder function. Replace with your differential privacy implementation.
-    # For demonstration purposes, it just returns the actual mean plus some noise.
-    actual_value = data[column].mean()
-    noise = np.random.laplace(0, 1/epsilon)  # simplistic differential privacy noise
-    noisy_value = actual_value + noise
-    return noisy_value
+def calculate_sensitivity(data, column):
+    """Calculate the global sensitivity for the mean."""
+    max_value = data[column].max()
+    min_value = data[column].min()
+    num_records = len(data)
+    return (max_value - min_value) / num_records
+
+def determine_epsilon(total_queries, privacy_budget, base_epsilon=0.1, risk_tolerance=0.5):
+    """Dynamically determine epsilon based on operational parameters."""
+    epsilon_decay = base_epsilon / total_queries  # Adjust epsilon based on the total number of queries
+    epsilon_budget_adjusted = privacy_budget * risk_tolerance  # Adjust epsilon based on the remaining privacy budget and risk tolerance
+    return min(epsilon_decay, epsilon_budget_adjusted)  # Choose the smaller epsilon for stronger privacy
+
+def calculate_noisy_statistic(data, column, epsilon, operation):
+    """Apply differential privacy noise based on the operation."""
+    sensitivity = calculate_sensitivity(data, column) if operation in ['mean', 'median'] else 1
+    actual_value = getattr(data[column], operation)() if operation != 'mode' else data[column].mode()[0]
+    noise = np.random.laplace(0, sensitivity/epsilon)  # Apply noise based on sensitivity
+    return actual_value + noise
 
 @app.route('/get_noisy/<operation>', methods=['POST'])
 def get_noisy_statistic(operation):
-    # Extracting data from the request
     data = request.json
     privacy_budget = float(data['privacyBudget'])
     file_name = data['fileName']
     column_name = data['columnName']
+    total_queries = data['totalQueries']
 
-    # Load the dataset (ensure proper error handling in your actual code)
-    file_path = os.path.join('data', file_name)  # Adjust the path as necessary
+    file_path = os.path.join('data', file_name)
     df = pd.read_csv(file_path)
 
-    # Calculate the noisy statistic based on the operation
-    epsilon_loss = 0.1  # This is a placeholder for the amount of epsilon used in the calculation
-    if operation == 'mean':
-        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
-    elif operation == 'median':
-        # Placeholder for median calculation
-        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
-    elif operation == 'mode':
-        # Placeholder for mode calculation
-        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
-    elif operation == 'min':
-        # Placeholder for min calculation
-        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
-    elif operation == 'max':
-        # Placeholder for max calculation
-        statistic_value = calculate_noisy_statistic(df, column_name, privacy_budget)
-    else:
-        return jsonify({"error": "Invalid operation"}), 400
+    try:
+        # Dynamically determine epsilon
+        epsilon_used = determine_epsilon(total_queries, privacy_budget)
 
-    # Update the privacy budget (ensure it doesn't go below zero)
-    new_privacy_budget = max(privacy_budget - epsilon_loss, 0)
+        # Ensure that the epsilon used does not exceed the remaining privacy budget
+        if epsilon_used > privacy_budget:
+            return jsonify({"error": "Not enough privacy budget"}), 400
 
-    # Print statement for the quantified amount of privacy loss
-    print(f"Privacy loss (epsilon reduction): {epsilon_loss}")
+        statistic_value = calculate_noisy_statistic(df, column_name, epsilon_used, operation)
+        new_privacy_budget = max(privacy_budget - epsilon_used, 0)
 
-    # Return the new privacy budget and the calculated noisy statistic
-    return jsonify({
-        "updatedPrivacyBudget": new_privacy_budget,
-        "statisticValue": statistic_value
-    })
+        print(f"Privacy loss (epsilon reduction): {epsilon_used}")
+
+        return jsonify({
+            "updatedPrivacyBudget": new_privacy_budget,
+            "statisticValue": statistic_value
+        })
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
     app.run(debug=False)  # Ensure debug mode is set to False here

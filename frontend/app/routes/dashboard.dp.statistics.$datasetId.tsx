@@ -76,24 +76,13 @@ export default function DatasetStatistics() {
                 <h3 className="text-2xl font-bold">{dataset.fileName}</h3>
                 <p className="py-2">File Type: {dataset.fileType}</p>
                 <p className="py-2">Privacy Budget: {dataset.privacyBudget}</p>
+                <p className="py-2">Total queries: {dataset.totalQueries}</p>
                 <p className="py-2">Data Owner: {dataset.user?.id || 'Unknown'}</p>
                 <hr className="my-4" />
 
                 <div style={{ display: 'flex', gap: '16px' }}>
-                    <ListItemButton onClick={() => navigate(`/dashboard/dp/statistics/${dataset.id}/mean`)} style={{ backgroundColor: '#1976D2', color: 'white' }}>
-                        Mean
-                    </ListItemButton>
-                    <ListItemButton onClick={() => navigate(`/dashboard/dp/statistics/${dataset.id}/median`)} style={{ backgroundColor: '#1976D2', color: 'white' }}>
-                        Median
-                    </ListItemButton>
-                    <ListItemButton onClick={() => navigate(`/dashboard/dp/statistics/${dataset.id}/mode`)} style={{ backgroundColor: '#1976D2', color: 'white' }}>
-                        Mode
-                    </ListItemButton>
-                    <ListItemButton onClick={() => navigate(`/dashboard/dp/statistics/${dataset.id}/min`)} style={{ backgroundColor: '#1976D2', color: 'white' }}>
-                        Min
-                    </ListItemButton>
-                    <ListItemButton onClick={() => navigate(`/dashboard/dp/statistics/${dataset.id}/max`)} style={{ backgroundColor: '#1976D2', color: 'white' }}>
-                        Max
+                    <ListItemButton onClick={() => navigate(`/dashboard/dp/statistics/${dataset.id}/calculate`)} style={{ backgroundColor: '#1976D2', color: 'white' }}>
+                        Calculate
                     </ListItemButton>
                 </div>
 

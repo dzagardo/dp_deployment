@@ -5,6 +5,7 @@ import { Box, Button, Container, Divider, Grid, List, ListItem, ListItemButton, 
 import { requireUserId } from "~/session.server";
 import { getDatasetListItems } from "~/models/dataset.server";
 import React from "react";
+import AlgorithmSelectorRemix from "./AlgorithmSelectorRemix";
 
 type Dataset = {
   id: string;
@@ -22,14 +23,6 @@ export const loader: LoaderFunction = async ({ request }) => {
 export default function StatisticsDashboard() {
   const { datasetListItems } = useLoaderData<{ datasetListItems: Dataset[] }>();
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
-
-  const handleStatRequest = (operation: string, column: string) => {
-    if (!selectedDataset || selectedDataset.privacyBudget <= 0) {
-      alert('No dataset selected or privacy budget is insufficient.');
-      return;
-    }
-    // ... handle the statistics request logic ...
-  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -76,6 +69,25 @@ export default function StatisticsDashboard() {
           </Paper>
         </Grid>
 
+        <Grid item xs={12}>
+          <Paper elevation={3} sx={{ p: 2, height: 'calc(25vh', overflow: 'hidden' }}>
+            <AlgorithmSelectorRemix datasetListItems={[]} onAlgorithmSelect={function (algorithm: string, epsilon: number, delta: number, lowerClip: number, upperClip: number): void {
+              throw new Error("Function not implemented.");
+            }} onGenerate={function (filename: string): void {
+              throw new Error("Function not implemented.");
+            }} filename={""} onSelectFile={function (file: string): void {
+              throw new Error("Function not implemented.");
+            }} onDataFetched={function (data: any[]): void {
+              throw new Error("Function not implemented.");
+            }} setSelectedFile={function (value: React.SetStateAction<string>): void {
+              throw new Error("Function not implemented.");
+            }} onColumnSelect={function (columnName: string): void {
+              throw new Error("Function not implemented.");
+            }} />
+          </Paper>
+        </Grid>
+
+
         {/* Third Row: Main Content Area */}
         <Grid item xs={12}>
           <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
@@ -83,6 +95,6 @@ export default function StatisticsDashboard() {
           </Paper>
         </Grid>
       </Grid>
-    </Container>
+    </Container >
   );
 }
