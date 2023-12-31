@@ -121,14 +121,14 @@ export default function StatisticsDashboard() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" sx={{ marginBottom: 2, letterSpacing: 1 }}>
+      <Typography variant="h4" component="h1" sx={{ mb: 2, letterSpacing: 1 }}>
         Understanding Privacy Budgets in Differential Privacy
       </Typography>
       <Grid container direction="column" spacing={3}>
 
         {/* Dataset Selection List */}
         <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 2, height: 'calc(50vh - 96px)', overflow: 'hidden' }}>
+          <Paper elevation={3} sx={{ p: 2, overflow: 'hidden' }}>
             <Box sx={{ maxHeight: 'calc(50vh - 96px)', overflowY: 'auto' }}>
               <Typography variant="h6" component="div" sx={{
                 padding: 2,
@@ -202,7 +202,7 @@ export default function StatisticsDashboard() {
         )}
 
         <Grid item xs={12}>
-          <Paper elevation={3} sx={{ padding: 2, margin: '20px 0' }}>
+          <Paper elevation={3} sx={{ p: 2 }}>
             <Grid container spacing={2} alignItems="left">
 
               {/* Operations */}
@@ -245,10 +245,9 @@ export default function StatisticsDashboard() {
           </Paper>
         </Grid>
 
-
         {/* Third Row: Main Content Area */}
         <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
+          <Paper elevation={3} sx={{ p: 2 }}>
             <Outlet context={{ selectedDataset }} /> {/* Provide selectedDataset as context */}
           </Paper>
         </Grid>

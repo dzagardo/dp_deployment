@@ -31,7 +31,7 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
   return (
     <React.Fragment>
       {/* Differential Privacy Section */}
-      <ListItemButton onClick={handleClick}>
+      <ListItemButton onClick={handleClick} component={Link} to="/dashboard/dp">
         <ListItemIcon>
           <DashboardIcon />
         </ListItemIcon>
@@ -42,43 +42,40 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
       {/* Collapsible Section for Differential Privacy */}
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-        <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/tabulardata">
+          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/tabulardata">
             <ListItemText primary="Generating Tabular Data" />
           </ListItemButton>
           <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/imagedata">
             <ListItemText primary="Generating Image Data" />
           </ListItemButton>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/syntheticdatasets">
-            <ListItemText primary="Manage Synthetic Datasets" />
-          </ListItemButton>
           <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/statistics">
-            <ListItemText primary="Manage Privacy Budgets" />
+            <ListItemText primary="Statistics" />
           </ListItemButton>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/datasets/lookup">
-            <ListItemText primary="Lookup Datasets" />
+          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/datasets">
+            <ListItemText primary="Dataset Management" />
           </ListItemButton>
         </List>
       </Collapse>
 
-      <ListItemButton onClick={() => onListItemClick('Homomorphic Encryption')}>
+      <ListItemButton component={Link} to="/dashboard/he" onClick={() => onListItemClick('Homomorphic Encryption')}>
         <ListItemIcon>
           <ShoppingCartIcon />
         </ListItemIcon>
         <ListItemText primary="Homomorphic Encryption" />
       </ListItemButton>
-      <ListItemButton onClick={() => onListItemClick('Polymorphic Encryption')}>
+      <ListItemButton component={Link} to="/dashboard/pe" onClick={() => onListItemClick('Polymorphic Encryption')}>
         <ListItemIcon>
           <PeopleIcon />
         </ListItemIcon>
         <ListItemText primary="Polymorphic Encryption" />
       </ListItemButton>
-      <ListItemButton onClick={() => onListItemClick('Private Set Intersection')}>
+      <ListItemButton component={Link} to="/dashboard/psi" onClick={() => onListItemClick('Private Set Intersection')}>
         <ListItemIcon>
           <BarChartIcon />
         </ListItemIcon>
         <ListItemText primary="Private Set Intersection" />
       </ListItemButton>
-      <ListItemButton onClick={() => onListItemClick('Secure Multiparty Computation')}>
+      <ListItemButton component={Link} to="/dashboard/smpc" onClick={() => onListItemClick('Secure Multiparty Computation')}>
         <ListItemIcon>
           <LayersIcon />
         </ListItemIcon>
@@ -90,49 +87,28 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
 
 export const secondaryListItems = (
   <React.Fragment>
-    <ListSubheader component="div" inset>
-      Saved reports
-    </ListSubheader>
-    <ListItemButton>
-      <ListItemIcon>
-        <AssignmentIcon />
-      </ListItemIcon>
-      <ListItemText primary="Current month" />
-    </ListItemButton>
-    <ListItemButton>
-      <ListItemIcon>
-        <AssignmentIcon />
-      </ListItemIcon>
-      <ListItemText primary="Last quarter" />
-    </ListItemButton>
-    <ListItemButton>
-      <ListItemIcon>
-        <AssignmentIcon />
-      </ListItemIcon>
-      <ListItemText primary="Year-end sale" />
-    </ListItemButton>
   </React.Fragment>
 );
 
 export const DataSetListItems = () => {
   const [datasets, setDatasets] = useState<string[]>([]);
 
-  // useEffect(() => {
-  //   const fetchDatasets = async () => {
-  //     try {
-  //       const response = await fetch('http://localhost:5000/list_files');
-  //       if (!response.ok) {
-  //         throw new Error('Network response was not ok');
-  //       }
-  //       const files: string[] = await response.json();
-  //       setDatasets(files);
-  //     } catch (error) {
-  //       console.error('Failed to fetch datasets:', error);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchDatasets = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/list_files');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const files: string[] = await response.json();
+        setDatasets(files);
+      } catch (error) {
+        console.error('Failed to fetch datasets:', error);
+      }
+    };
 
-  //   fetchDatasets();
-  // }, []);
+    fetchDatasets();
+  }, []);
 
   return (
     <React.Fragment>
