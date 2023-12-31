@@ -7,8 +7,7 @@ import invariant from "tiny-invariant";
 
 import { getDataset, updateDataset } from "~/models/dataset.server"; // Adjust this import as necessary
 import { requireUserId } from "~/session.server";
-import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import AlgorithmSelectorRemix from "./AlgorithmSelectorRemix";
+
 
 export const loader: LoaderFunction = async ({ params, request }) => {
     const userId = await requireUserId(request);

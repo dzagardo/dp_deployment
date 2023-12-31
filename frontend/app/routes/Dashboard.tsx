@@ -247,8 +247,7 @@ export default function Dashboard() {
             >
               <Tab label="Tabular Data" component={Link} to="/dashboard/dp/tabulardata" />
               <Tab label="Image Data" component={Link} to="/dashboard/dp/imagedata" />
-              <Tab label="Synthetic Datasets" component={Link} to="/dashboard/dp/syntheticdatasets" />
-              <Tab label="Statistics" component={Link} to="/dashboard/dp/statistics/management" />
+              <Tab label="Statistics" component={Link} to="/dashboard/dp/statistics/" />
               <Tab label="Dataset Management" component={Link} to="/dashboard/dp/datasets/management" />
               {/* ... add more tabs as needed */}
             </Tabs>
