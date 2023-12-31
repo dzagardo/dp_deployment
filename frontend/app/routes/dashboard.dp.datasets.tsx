@@ -24,13 +24,6 @@ export default function DatasetView() {
                 Dataset Management
             </Typography>
             <Grid container direction="column" spacing={3}>
-                {/* First Row: File Uploader */}
-                <Grid item xs={12}>
-                    <Paper elevation={3} sx={{ p: 2 }}>
-                        <FileUploader isUploading={isUploading} />
-                    </Paper>
-                </Grid>
-
                 {/* Second Row: Dataset List */}
                 <Grid item xs={12}>
                     <Paper elevation={3} sx={{ p: 2, height: 'calc(50vh - 96px)', overflow: 'hidden' }}>
@@ -69,6 +62,13 @@ export default function DatasetView() {
                     </Paper>
                 </Grid>
 
+                {/* First Row: File Uploader */}
+                <Grid item xs={12}>
+                    <Paper elevation={3} sx={{ p: 2 }}>
+                        <FileUploader isUploading={isUploading} />
+                    </Paper>
+                </Grid>
+                
                 {/* Third Row: Main Content Area */}
                 <Grid item xs={12}>
                     <Paper elevation={3} sx={{ p: 2, height: '100%' }}>

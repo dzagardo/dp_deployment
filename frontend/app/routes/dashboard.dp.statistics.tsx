@@ -248,7 +248,7 @@ export default function StatisticsDashboard() {
         {/* Third Row: Main Content Area */}
         <Grid item xs={12}>
           <Paper elevation={3} sx={{ p: 2 }}>
-            <Outlet context={{ selectedDataset }} /> {/* Provide selectedDataset as context */}
+            <Outlet context={{ selectedDataset }} />
           </Paper>
         </Grid>
       </Grid>
