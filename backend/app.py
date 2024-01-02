@@ -393,6 +393,8 @@ def get_noisy_statistic(operation):
     file_path = os.path.join('data', file_name)
     df = pd.read_csv(file_path)
 
+    print(data)
+    print(column_name)
     try:
         # Dynamically determine epsilon
         epsilon_used = determine_epsilon(total_queries, privacy_budget)

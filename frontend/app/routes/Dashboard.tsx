@@ -167,7 +167,7 @@ export default function Dashboard() {
         return <DashboardHE />;
       case 'Polymorphic Encryption':
         return <DashboardPE />;
-      case 'Private Set Intersection':
+      case 'Private Set Intersection':  
         return <DashboardPSI />;
       case 'Secure Multiparty Computation':
         return <DashboardSMPC />;

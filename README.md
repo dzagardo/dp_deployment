@@ -2,8 +2,14 @@
 
 This project aims to provide an interface for uploading CSV files and generating private synthetic data using a React-based frontend and Flask-based backend.
 
+TODO:
+
+Need to figure out why the dashboard/dp/statistics/${datasetId} route's buttons don't update the dataset state in the prisma backend.
+
 ![GUI_LOGIN_SCREEN_1](GUI_LOGIN_SCREEN_1.png)
 ![GUI_LOGIN_SCREEN_2](GUI_LOGIN_SCREEN_2.png)
+![GUI_LOGIN_SCREEN_3](GUI_LOGIN_SCREEN_3.png)
+![GUI_LOGIN_SCREEN_4](GUI_LOGIN_SCREEN_4.png)
 ![GUI_DASHBOARD](GUI_DASHBOARD.png)
 
 ## Project Structure
