@@ -58,6 +58,7 @@ This will start the Flask server on http://127.0.0.1:5000.
 To start the frontend, navigate to the frontend directory and run:
 
 ```bash
+npx build remix
 npm install
 npm run dev
 ```
