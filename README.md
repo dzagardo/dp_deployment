@@ -5,6 +5,7 @@ This project aims to provide an interface for uploading CSV files and generating
 TODO:
 
 Need to figure out why the dashboard/dp/statistics/${datasetId} route's buttons don't update the dataset state in the prisma backend.
+Finish updating README
 
 ![GUI_LOGIN_SCREEN_1](GUI_LOGIN_SCREEN_1.png)
 ![GUI_LOGIN_SCREEN_2](GUI_LOGIN_SCREEN_2.png)
