@@ -10,7 +10,6 @@ Need to figure out why the dashboard/dp/statistics/${datasetId} route's buttons 
 ![GUI_LOGIN_SCREEN_2](GUI_LOGIN_SCREEN_2.png)
 ![GUI_LOGIN_SCREEN_3](GUI_LOGIN_SCREEN_3.png)
 ![GUI_LOGIN_SCREEN_4](GUI_LOGIN_SCREEN_4.png)
-![GUI_DASHBOARD](GUI_DASHBOARD.png)
 
 ## Project Structure
 
@@ -50,7 +49,8 @@ The React frontend allows users to:
 To run the backend server, navigate to the `backend` directory and run:
 
 ```bash
-python app.py
+pip install -r requirements.txt
+flask run
 ```
 
 This will start the Flask server on http://127.0.0.1:5000.
@@ -58,7 +58,8 @@ This will start the Flask server on http://127.0.0.1:5000.
 To start the frontend, navigate to the frontend directory and run:
 
 ```bash
-npm start
+npm install
+npm run dev
 ```
 
 This will launch the React application, usually on http://localhost:3000.
