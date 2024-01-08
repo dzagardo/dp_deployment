@@ -6,8 +6,7 @@ TODO:
 
 Need to figure out why the dashboard/dp/statistics/${datasetId} route's buttons don't update the dataset state in the prisma backend.
 Finish updating README
-These commits are so wimpy i'm embarrassed but it's something
-Another meaningless commit. I'm coding, just not on this project right now. Maybe I'll upload my kaggle code to a private repo? Might make debugging easier o.O
+Figure out why we're dropping information in our JSON return from generating synthetic data
 
 ![GUI_LOGIN_SCREEN_1](GUI_LOGIN_SCREEN_1.png)
 ![GUI_LOGIN_SCREEN_2](GUI_LOGIN_SCREEN_2.png)
