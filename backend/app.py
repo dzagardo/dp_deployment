@@ -148,6 +148,7 @@ def generate_data(algorithm_name, filename):
 
         # Parse epsilon, delta, clipping values, and column name from the request data
         data = request.get_json()
+        print("data is: ", data)
         epsilon = data.get('epsilon', 1.0)
         delta = data.get('delta', 1e-5)
         upper_clip = data.get('lowerClip', 5)
@@ -192,6 +193,8 @@ def generate_data(algorithm_name, filename):
             lower_clip,
             upper_clip
         )
+
+        print("synthetic data is: ", synthetic_data)
 
         logging.info("Synthetic data generation complete.")
 

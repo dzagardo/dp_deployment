@@ -24,5 +24,12 @@ class GaussianMechanism(DPAlgorithm):
         noise_scale = np.sqrt(2 * np.log(1.25 / delta)) / epsilon
         synthetic_data = data + np.random.normal(0, noise_scale, size=(sample_size, len(data)))
         # Apply clipping to the synthetic data
-        synthetic_data_clipped = np.clip(synthetic_data, lower_clip, upper_clip)
+        print(upper_clip)
+        print(lower_clip)
+        print(data)
+        print(epsilon)
+        print(delta)
+        print(sample_size)
+        print(synthetic_data)
+        synthetic_data_clipped = np.clip(synthetic_data, upper_clip, lower_clip)
         return synthetic_data_clipped
