@@ -13,7 +13,7 @@ class DPGAN(DPAlgorithm):
     def build_generator(self):
         model = tf.keras.Sequential([
             tf.keras.layers.Dense(128, activation='relu', input_dim=1),
-            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.LeakyReLU(alpha=0.01),
             tf.keras.layers.Dense(256, activation='relu'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Dense(512, activation='relu'),
@@ -27,6 +27,7 @@ class DPGAN(DPAlgorithm):
             tf.keras.layers.Dense(512, activation='relu', input_dim=1),  # Input dimension is 1 (for one rating)
             tf.keras.layers.Dense(256, activation='relu'),
             tf.keras.layers.Dense(128, activation='relu'),
+            tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Dense(1, activation='sigmoid')  # Output is a probability
         ])
         return model
@@ -41,7 +42,7 @@ class DPGAN(DPAlgorithm):
         return tf.keras.losses.BinaryCrossentropy(from_logits=False)(tf.ones_like(fake_output), fake_output)
     
     def generate_synthetic_data(self, data, sample_size, epsilon, delta, lower_clip, upper_clip):
-        epochs = 10
+        epochs = 25
         batch_size = 100
         noise_dim = 1
         print_interval = 1
@@ -79,8 +80,6 @@ class DPGAN(DPAlgorithm):
             learning_rate=0.01
         )
 
-        print(sample_size)
-
         # Non-DP optimizer for the generator
         non_dp_optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
@@ -110,17 +109,19 @@ class DPGAN(DPAlgorithm):
 
                 # Combine real and synthetic data
                 combined_data = tf.concat([real_data, synthetic_data], axis=0)
-
                 # Dynamically create labels for real and synthetic data
                 labels_real = tf.ones((current_batch_size, 1), dtype=tf.float32)
                 labels_synthetic = tf.zeros((current_batch_size, 1), dtype=tf.float32)
                 labels_combined = tf.concat([labels_real, labels_synthetic], axis=0)
 
+
                 # Train the discriminator
                 with tf.GradientTape() as disc_tape:
                     discriminator_output = discriminator(combined_data, training=True)
-                    d_loss = lambda: self.discriminator_loss(labels_combined, discriminator_output)
+                    d_loss = self.discriminator_loss(labels_combined, discriminator_output)
+                    d_loss_value = self.discriminator_loss(labels_combined, discriminator_output)
                     d_gradients = optimizer.compute_gradients(d_loss, discriminator.trainable_variables, gradient_tape=disc_tape)
+                    
 
                 # Apply gradients through DP optimizer
                 optimizer.apply_gradients(d_gradients)
@@ -137,7 +138,7 @@ class DPGAN(DPAlgorithm):
 
                 # Print progress
                 if (epoch + 1) % print_interval == 0:
-                    print(f"Epoch {epoch + 1}, Generator Loss: {g_loss}, Discriminator Loss: {d_loss}")
+                    print(f"Epoch {epoch + 1}, Generator Loss: {g_loss}, Discriminator Loss: {d_loss_value}")
 
         # Generate final synthetic data
         synthetic_data = generator.predict(np.random.normal(size=(sample_size, 1)))
