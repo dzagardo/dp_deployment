@@ -23,7 +23,7 @@ const AlgorithmSelectorRemix: React.FC<AlgorithmSelectorProps> = ({ datasetListI
   const [fileList, setFileList] = useState<string[]>([]);
   const [columnNames, setColumnNames] = useState<string[]>([]);
   const [selectedColumnName, setSelectedColumnName] = useState<string>('');
-  const algorithms = ['Gaussian Mechanism', 'Laplace Mechanism'];
+  const algorithms = ['Gaussian Mechanism', 'Laplace Mechanism', 'DP-GAN'];
 
   useEffect(() => {
     const fetchFileList = async () => {

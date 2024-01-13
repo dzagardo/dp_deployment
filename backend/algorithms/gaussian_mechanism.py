@@ -31,5 +31,5 @@ class GaussianMechanism(DPAlgorithm):
         print(delta)
         print(sample_size)
         print(synthetic_data)
-        synthetic_data_clipped = np.clip(synthetic_data, upper_clip, lower_clip)
+        synthetic_data_clipped = np.clip(synthetic_data, lower_clip, upper_clip)
         return synthetic_data_clipped

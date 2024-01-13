@@ -14,10 +14,12 @@ import os
 import time
 from algorithm_registry import AlgorithmRegistry
 from algorithms.gaussian_mechanism import GaussianMechanism
+from algorithms.dp_gan import DPGAN
 from algorithms.laplace_mechanism import LaplaceMechanism
 
 # Register the algorithms
 AlgorithmRegistry.register_algorithm("Gaussian Mechanism", GaussianMechanism)
+AlgorithmRegistry.register_algorithm("DP-GAN", DPGAN)
 AlgorithmRegistry.register_algorithm("Laplace Mechanism", LaplaceMechanism)
 
 app = Flask(__name__)
@@ -151,8 +153,8 @@ def generate_data(algorithm_name, filename):
         print("data is: ", data)
         epsilon = data.get('epsilon', 1.0)
         delta = data.get('delta', 1e-5)
-        upper_clip = data.get('lowerClip', 5)
-        lower_clip = data.get('upperClip', 0)
+        lower_clip = data.get('lowerClip', 0)
+        upper_clip = data.get('upperClip', 5)
         column_name = data.get('column_name')  # This is the new parameter for the column name
 
         # Sanitize epsilon and delta by replacing dots with underscores

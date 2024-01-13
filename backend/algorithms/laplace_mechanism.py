@@ -10,5 +10,5 @@ class LaplaceMechanism(DPAlgorithm):
         scale = sensitivity / epsilon
         synthetic_data = data + np.random.laplace(0, scale, size=(sample_size, len(data)))
         # Apply clipping to the synthetic data
-        synthetic_data_clipped = np.clip(synthetic_data, upper_clip, lower_clip)
+        synthetic_data_clipped = np.clip(synthetic_data, lower_clip, upper_clip)
         return synthetic_data_clipped
