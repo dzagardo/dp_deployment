@@ -5,6 +5,8 @@ import tensorflow as tf
 from tensorflow_privacy.privacy.optimizers.dp_optimizer import DPGradientDescentOptimizer
 from tensorflow_privacy.privacy.dp_query.gaussian_query import GaussianSumQuery
 from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy_statement
+from tensorflow_privacy.privacy.analysis.compute_noise_from_budget_lib import compute_noise
+
 from algorithms.dp_algorithm import DPAlgorithm
 
 class DPGAN(DPAlgorithm):
@@ -37,7 +39,7 @@ class DPGAN(DPAlgorithm):
     @staticmethod
     def generator_loss(fake_output):
         return tf.keras.losses.BinaryCrossentropy(from_logits=False)(tf.ones_like(fake_output), fake_output)
-
+    
     def generate_synthetic_data(self, data, sample_size, epsilon, delta, lower_clip, upper_clip):
         epochs = 10
         batch_size = 100
@@ -47,10 +49,9 @@ class DPGAN(DPAlgorithm):
         data = tf.data.Dataset.from_tensor_slices(data).batch(batch_size)
         number_of_examples = len(data)
 
-        total_steps = epochs * (len(data) // batch_size)
-
         # Calculate noise multiplier
-        noise_multiplier = 1.0  # Placeholder, adjust based on your needs
+        noise_multiplier = compute_noise(number_of_examples, batch_size, epsilon, epochs, delta, noise_lbd=1e-5)
+
         l2_norm_clip = 1.0
 
         # Calculate the privacy statement
@@ -147,4 +148,6 @@ class DPGAN(DPAlgorithm):
         # Apply clipping to the synthetic data
         synthetic_data_clipped = np.clip(synthetic_data, lower_clip, upper_clip)
 
-        return synthetic_data_clipped
+        synthetic_data_rounded = np.rint(synthetic_data_clipped)
+
+        return synthetic_data_rounded

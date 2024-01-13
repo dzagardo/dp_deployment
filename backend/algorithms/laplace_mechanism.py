@@ -11,4 +11,5 @@ class LaplaceMechanism(DPAlgorithm):
         synthetic_data = data + np.random.laplace(0, scale, size=(sample_size, len(data)))
         # Apply clipping to the synthetic data
         synthetic_data_clipped = np.clip(synthetic_data, lower_clip, upper_clip)
-        return synthetic_data_clipped
+        synthetic_data_rounded = np.rint(synthetic_data_clipped)
+        return synthetic_data_rounded
