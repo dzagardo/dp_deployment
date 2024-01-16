@@ -6,6 +6,7 @@ from tensorflow_privacy.privacy.optimizers.dp_optimizer import DPGradientDescent
 from tensorflow_privacy.privacy.dp_query.gaussian_query import GaussianSumQuery
 from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy_statement
 from tensorflow_privacy.privacy.analysis.compute_noise_from_budget_lib import compute_noise
+import tensorflow_probability as tfp
 
 from algorithms.dp_algorithm import DPAlgorithm
 
@@ -38,8 +39,28 @@ class DPGAN(DPAlgorithm):
     def generator_loss(fake_output):
         return tf.keras.losses.BinaryCrossentropy(from_logits=False)(tf.ones_like(fake_output), fake_output)
     
+    @staticmethod
+    def average_rating_loss(real_data_avg, synthetic_data):
+        synthetic_data_avg = tf.reduce_mean(synthetic_data)
+        return tf.abs(real_data_avg - synthetic_data_avg)
+    
+    @staticmethod
+    def median_rating_loss(real_data_median, synthetic_data):
+        synthetic_data_median = tfp.stats.percentile(synthetic_data, 50.0, interpolation='midpoint')  # Compute the median
+        return tf.abs(real_data_median - synthetic_data_median)
+
+    @staticmethod
+    def min_rating_loss(real_data_min, synthetic_data):
+        synthetic_data_min = tf.reduce_min(synthetic_data)
+        return tf.abs(real_data_min - synthetic_data_min)
+    
+    @staticmethod
+    def max_rating_loss(real_data_max, synthetic_data):
+        synthetic_data_max = tf.reduce_max(synthetic_data)
+        return tf.abs(real_data_max - synthetic_data_max)
+
     def generate_synthetic_data(self, data, sample_size, epsilon, delta, lower_clip, upper_clip):
-        epochs = 20
+        epochs = 25
         batch_size = 100
         noise_dim = 1
         print_interval = 1
@@ -51,12 +72,12 @@ class DPGAN(DPAlgorithm):
         # Variables to track the minimum loss
         min_g_loss = float('inf')
         min_d_loss = float('inf')
-        loss_reduction_threshold = 0.0001  # Threshold to trigger learning rate reduction
+        loss_reduction_threshold = 0.00000001  # Threshold to trigger learning rate reduction
 
         # Calculate noise multiplier
         noise_multiplier = compute_noise(number_of_examples, batch_size, epsilon, epochs, delta, noise_lbd=1e-1)
 
-        l2_norm_clip = 3.0
+        l2_norm_clip = 1.0
 
         # Calculate the privacy statement
         # Use compute_dp_sgd_privacy_statement to get the privacy statement
@@ -77,7 +98,7 @@ class DPGAN(DPAlgorithm):
 
         # Initial learning rates
         lr_discriminator = 0.00099
-        lr_generator = 0.0058
+        lr_generator = 0.01
 
         # Initial Optimizers
         dp_sum_query = GaussianSumQuery(l2_norm_clip, noise_multiplier)
@@ -119,6 +140,11 @@ class DPGAN(DPAlgorithm):
 
                 # Determine current batch size (may be smaller than the fixed batch size for the last batch in data)
                 current_batch_size = tf.shape(real_data)[0]
+                # Calculate average rating of real data
+                real_data_avg = tf.reduce_mean(real_data)
+                real_data_median = tfp.stats.percentile(real_data, 50.0, interpolation='midpoint')  # Compute the median
+                real_data_min = tf.reduce_min(real_data)
+                real_data_max = tf.reduce_max(real_data)
 
                 # Generate batch of synthetic data
                 noise = tf.random.normal([current_batch_size, noise_dim])
@@ -132,7 +158,7 @@ class DPGAN(DPAlgorithm):
                 labels_combined = tf.concat([labels_real, labels_synthetic], axis=0)
 
                 # Train the discriminator
-                with tf.GradientTape() as disc_tape:
+                with tf.GradientTape(persistent=True) as disc_tape:
                     discriminator_output = discriminator(combined_data, training=True)
                     d_loss = self.discriminator_loss(labels_combined, discriminator_output)
                     d_loss_value = self.discriminator_loss(labels_combined, discriminator_output)
@@ -142,10 +168,21 @@ class DPGAN(DPAlgorithm):
                 optimizer.apply_gradients(d_gradients)
 
                 # Train the generator
-                with tf.GradientTape() as gen_tape:
+                with tf.GradientTape(persistent=True) as gen_tape:
                     synthetic_data = generator(noise, training=True)
-                    predictions = discriminator(synthetic_data, training=False)  # Notice training=False
+                    # Existing generator loss
+                    predictions = discriminator(synthetic_data, training=False)
                     g_loss = self.generator_loss(predictions)
+                    # Calculate average rating loss
+                    avg_rating_loss = self.average_rating_loss(real_data_avg, synthetic_data)
+                    median_rating_loss = self.median_rating_loss(real_data_median, synthetic_data)
+                    min_rating_loss = self.min_rating_loss(real_data_min, synthetic_data)
+                    max_rating_loss = self.max_rating_loss(real_data_max, synthetic_data)
+                    # Combine losses
+                    combined_g_loss = avg_rating_loss + median_rating_loss + min_rating_loss + max_rating_loss + g_loss
+                    # Compute and apply gradients
+                    g_gradients = gen_tape.gradient(combined_g_loss, generator.trainable_variables)
+                    non_dp_optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))
 
                 # Compute and apply gradients through standard optimizer
                 g_gradients = gen_tape.gradient(g_loss, generator.trainable_variables)
