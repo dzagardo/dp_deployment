@@ -30,30 +30,36 @@ class DPGAN(DPAlgorithm):
         ])
         return model
 
+    # Loss function calculating discriminator's ability to catch generator
     @staticmethod
     def discriminator_loss(labels, predictions):
         loss = tf.keras.losses.BinaryCrossentropy(from_logits=False)(labels, predictions)
         return loss
 
+    # Loss function calculating generator's ability to fool discriminator
     @staticmethod
     def generator_loss(fake_output):
         return tf.keras.losses.BinaryCrossentropy(from_logits=False)(tf.ones_like(fake_output), fake_output)
     
+    # Loss function calculating difference from mean
     @staticmethod
     def average_rating_loss(real_data_avg, synthetic_data):
         synthetic_data_avg = tf.reduce_mean(synthetic_data)
         return tf.abs(real_data_avg - synthetic_data_avg)
     
+    # Loss function calculating difference from median
     @staticmethod
     def median_rating_loss(real_data_median, synthetic_data):
         synthetic_data_median = tfp.stats.percentile(synthetic_data, 50.0, interpolation='midpoint')  # Compute the median
         return tf.abs(real_data_median - synthetic_data_median)
 
+    # Loss function calculating difference from minimum
     @staticmethod
     def min_rating_loss(real_data_min, synthetic_data):
         synthetic_data_min = tf.reduce_min(synthetic_data)
         return tf.abs(real_data_min - synthetic_data_min)
     
+    # Loss function calculating difference from maximum
     @staticmethod
     def max_rating_loss(real_data_max, synthetic_data):
         synthetic_data_max = tf.reduce_max(synthetic_data)
@@ -107,9 +113,6 @@ class DPGAN(DPAlgorithm):
 
         # Compile the discriminator with the DP optimizer
         discriminator.compile(optimizer=optimizer, loss='binary_crossentropy')
-
-        # Assuming that `optimizer` is the DP optimizer for the discriminator
-        # and `non_dp_optimizer` is a standard optimizer for the generator
 
         # Variables to track the minimum loss
         min_g_loss = float('inf')
@@ -218,12 +221,8 @@ class DPGAN(DPAlgorithm):
         # Generate final synthetic data
         synthetic_data = generator.predict(np.random.normal(size=(sample_size, 1)))
 
-        # Scale output from (-1, 1) to (1, 5)
-        # synthetic_data_scaled = (synthetic_data + 1) * 2 + 1  # Transforms the range from (-1, 1) to (1, 5)
-        synthetic_data_scaled = synthetic_data # Transforms the range from (-1, 1) to (1, 5)
-
         # Apply clipping to the synthetic data
-        synthetic_data_clipped = np.clip(synthetic_data_scaled, lower_clip, upper_clip)
+        synthetic_data_clipped = np.clip(synthetic_data, lower_clip, upper_clip)
 
         synthetic_data_rounded = np.rint(synthetic_data_clipped)
 
