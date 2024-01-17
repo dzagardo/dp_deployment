@@ -231,9 +231,8 @@ export default function Dashboard() {
             noWrap
             sx={{ flexGrow: 1 }}
           >
-            
+            The Privacy Toolbox
           </Typography>
-          {/* Here we add the Tabs */}
           <form action={`/user/${userId}`} method="get">
             <Button type="submit" color="inherit">
               Profile
@@ -247,18 +246,6 @@ export default function Dashboard() {
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" open={open}>
-        <Toolbar
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            px: [1],
-          }}
-        >
-          <IconButton onClick={toggleDrawer}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </Toolbar>
         <Divider />
         <Paper
           elevation={3} // you can adjust the elevation for more or less shadow

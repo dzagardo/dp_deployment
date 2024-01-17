@@ -9,13 +9,14 @@ import LayersIcon from '@mui/icons-material/Layers';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { List, ListItem, ListItemText, Link as MuiLink, useTheme } from '@mui/material';
+import { IconButton, List, ListItem, ListItemText, Link as MuiLink, Toolbar, useTheme } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder'; // Added for datasets
 import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { useLocation } from '@remix-run/react';
 import { Layers } from '@mui/icons-material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 interface MainListItemsProps {
   onListItemClick: (viewName: string) => void;
@@ -303,6 +304,7 @@ export const secondaryListItems = (
 
 export const DataSetListItems = () => {
   const [datasets, setDatasets] = useState<string[]>([]);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     const fetchDatasets = async () => {
@@ -321,6 +323,10 @@ export const DataSetListItems = () => {
     fetchDatasets();
   }, []);
 
+  const toggleDrawer = () => {
+    setOpen(!open);
+  };
+
   return (
     <React.Fragment>
       {/* <ListSubheader component="div" inset>
@@ -328,7 +334,7 @@ export const DataSetListItems = () => {
       </ListSubheader> */}
       {datasets.map((dataset, index) => (
         <ListItemButton key={index} component={Link} to={`/dashboard/dp/datasets/${dataset}`}>
-        <ListItemIcon sx={{ color: 'white' }}> {/* Set icon color to white */}
+          <ListItemIcon sx={{ color: 'white' }}> {/* Set icon color to white */}
             <AssignmentIcon />
           </ListItemIcon>
           <ListItemText
@@ -343,6 +349,21 @@ export const DataSetListItems = () => {
           />
         </ListItemButton>
       ))}
+      <Toolbar
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          px: [1],
+        }}
+      >
+        <IconButton onClick={toggleDrawer}>
+          <ChevronLeftIcon sx={{
+            color: "white",
+          }} />
+        </IconButton>
+      </Toolbar>
     </React.Fragment>
+
   );
 };
