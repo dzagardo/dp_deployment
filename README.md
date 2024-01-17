@@ -10,8 +10,8 @@ Figure out why we're dropping information in our JSON return from generating syn
 
 ![GUI_LOGIN_SCREEN_1](GUI_LOGIN_SCREEN_1.png)
 ![GUI_LOGIN_SCREEN_2](GUI_LOGIN_SCREEN_2.png)
-![GUI_LOGIN_SCREEN_3](GUI_LOGIN_SCREEN_3.png)
-![GUI_LOGIN_SCREEN_4](GUI_LOGIN_SCREEN_4.png)
+![GUI_LOGIN_SCREEN_3v2](GUI_LOGIN_SCREEN_3v2.png)
+![GUI_LOGIN_SCREEN_4v2](GUI_LOGIN_SCREEN_4v2.png)
 
 ## Project Structure
 
