@@ -130,6 +130,9 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           <ListItemButton sx={listItemButtonStyles('/dashboard/dp/datasets/management')} component={Link} to="/dashboard/dp/datasets/management">
             <ListItemText primary="Dataset Management" />
           </ListItemButton>
+          <ListItemButton sx={listItemButtonStyles('/dashboard/dp/whatisdp')} component={Link} to="/dashboard/dp/whatisdp">
+            <ListItemText primary="What is Differential Privacy?" />
+          </ListItemButton>
         </List>
       </Collapse>
 

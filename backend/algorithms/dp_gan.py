@@ -224,4 +224,7 @@ class DPGAN(DPAlgorithm):
 
         synthetic_data_rounded = np.rint(synthetic_data_clipped)
 
-        return synthetic_data_rounded
+        # Convert the rounded data to integer type
+        synthetic_data_integers = synthetic_data_rounded.astype(int)
+
+        return synthetic_data_integers

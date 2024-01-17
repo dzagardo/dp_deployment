@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { json, redirect, ActionFunction, LoaderFunction } from '@remix-run/node';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
@@ -22,11 +22,9 @@ import DashboardSMPC from './dashboard.smpc';
 import { requireUserId } from '~/session.server';
 import { createDataset } from '~/models/dataset.server';
 import { useLoaderData } from "@remix-run/react";
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import { Link } from 'react-router-dom';
-import DashboardTabs from './DashboardTabs';
 import { Paper } from '@mui/material';
+import { useLocation } from '@remix-run/react'; // Make sure to import from @remix-run/react
+
 
 // Type for the loader data
 type LoaderData = {
@@ -163,11 +161,27 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 export default function Dashboard() {
   const [open, setOpen] = useState(true);
   const { userId } = useLoaderData<LoaderData>(); // Specify the type of loader data
-  const [currentView, setCurrentView] = useState('DefaultView');
+  const location = useLocation(); // Use the useLocation hook to get the location object
+  const [currentView, setCurrentView] = useState('');
+
+  // Function to determine the initial view based on the current path
+  const getViewFromPath = (path: string) => {
+    if (path.includes('/dashboard/dp')) return 'Differential Privacy';
+    if (path.includes('/dashboard/he')) return 'Homomorphic Encryption';
+    if (path.includes('/dashboard/pe')) return 'Polymorphic Encryption';
+    if (path.includes('/dashboard/psi')) return 'Private Set Intersection';
+    if (path.includes('/dashboard/smpc')) return 'Secure Multiparty Computation';
+    // Add more checks for other paths
+    return 'default'; // Fallback to default view
+  };
+
+  useEffect(() => {
+    // Set the current view based on the current route when the component mounts
+    setCurrentView(getViewFromPath(location.pathname));
+  }, [location]); // Only re-run the effect if the location changes
 
   // Render the current view based on state
   const renderCurrentView = () => {
-    let tabs;
     switch (currentView) {
       case 'Differential Privacy':
         return <DashboardDP />;
@@ -181,7 +195,7 @@ export default function Dashboard() {
         return <DashboardSMPC />;
       // Add cases for other views
       default:
-        return <div>Selected view not found</div>;
+        return <div></div>;
     }
   };
 
