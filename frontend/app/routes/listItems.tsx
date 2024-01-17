@@ -9,78 +9,286 @@ import LayersIcon from '@mui/icons-material/Layers';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { List, ListItem, ListItemText, Link as MuiLink } from '@mui/material';
+import { List, ListItem, ListItemText, Link as MuiLink, useTheme } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder'; // Added for datasets
 import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-
+import { useLocation } from '@remix-run/react';
+import { Layers } from '@mui/icons-material';
 
 interface MainListItemsProps {
   onListItemClick: (viewName: string) => void;
 }
 
-export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
-  // State to handle the collapsible section
-  const [open, setOpen] = useState(false);
+const dodgerBlue = '#1E90FF'; // Dodger blue color
 
-  const handleClick = () => {
-    setOpen(!open); // Toggle the state to show or hide the nested items
+export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
+  const [open, setOpen] = useState(false);
+  const location = useLocation(); // Hook to get the current pathname
+  const theme = useTheme(); // Access the theme
+  const [openSections, setOpenSections] = useState({
+    dp: false,
+    he: false,
+    pe: false,
+    psi: false,
+    smpc: false,
+    // Add more sections as needed
+  });
+
+  type SectionKey = 'dp' | 'he' | 'pe' | 'psi' | 'smpc'; // Add more keys as needed
+
+  // Update handleClick to also set the current view
+  const handleClick = (section: SectionKey, viewName: string) => {
+    setOpenSections(prevState => ({
+      ...prevState,
+      [section]: !prevState[section] // Toggle the specific section
+    }));
+    onListItemClick(viewName); // Set the current view
   };
+
+  const isActive = (route: string) => {
+    return location.pathname === route;
+  };
+
+  // Function to get the color based on the active route
+  const getIconColor = (route: string) => {
+    // Check if the current location pathname starts with the given route
+    return location.pathname.startsWith(route) ? theme.palette.secondary.main : dodgerBlue;
+  };
+
+  const getBackgroundColor = (route: string) => {
+    return isActive(route) ? '#222222' : 'transparent'; // Adjust the color based on your theme
+  };
+
+  // You can now use a function to set styles dynamically
+  const listItemButtonStyles = (route: string) => ({
+    borderRadius: 3,
+    my: 1,
+    mx: 3,
+    '.MuiListItemIcon-root': {
+      color: dodgerBlue,
+    },
+    color: 'gray',
+    backgroundColor: getBackgroundColor(route),
+    '&:hover': {
+      backgroundColor: 'lightgray',
+      '.MuiListItemIcon-root': {
+        color: 'white',
+      },
+      '.MuiListItemText-primary': {
+        color: 'black',
+      },
+    }
+  });
 
   return (
     <React.Fragment>
       {/* Differential Privacy Section */}
-      <ListItemButton onClick={handleClick} component={Link} to="/dashboard/dp">
+      <ListItemButton
+        sx={{
+          borderRadius: 2, // Adjust for rounded corners
+          my: 1, // Margin top and bottom for spacing between items
+          mx: 1, // Margin left and right for spacing from the drawer edges
+          '.MuiListItemIcon-root': {
+            color: () => getIconColor('/dashboard/dp'), // Use a function to determine the color based on the route
+          },
+          color: 'white',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.main,
+            '.MuiListItemIcon-root': {
+              color: 'white',
+            },
+            '.MuiListItemText-primary': {
+              color: 'white',
+            },
+          }
+        }}
+        onClick={() => handleClick('dp', 'Differential Privacy')}
+        component={Link}
+        to="/dashboard/dp"
+      >
         <ListItemIcon>
           <DashboardIcon />
         </ListItemIcon>
         <ListItemText primary="Differential Privacy" />
-        {open ? <ExpandLess /> : <ExpandMore />}
+        {openSections.dp ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
 
       {/* Collapsible Section for Differential Privacy */}
-      <Collapse in={open} timeout="auto" unmountOnExit>
+      <Collapse in={openSections.dp} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/tabulardata">
+          <ListItemButton sx={listItemButtonStyles('/dashboard/dp/tabulardata')} component={Link} to="/dashboard/dp/tabulardata">
             <ListItemText primary="Generating Tabular Data" />
           </ListItemButton>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/imagedata">
+          <ListItemButton sx={listItemButtonStyles('/dashboard/dp/imagedata')} component={Link} to="/dashboard/dp/imagedata">
             <ListItemText primary="Generating Image Data" />
           </ListItemButton>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/statistics">
+          <ListItemButton sx={listItemButtonStyles('/dashboard/dp/statistics')} component={Link} to="/dashboard/dp/statistics">
             <ListItemText primary="Statistics" />
           </ListItemButton>
-          <ListItemButton sx={{ pl: 4 }} component={Link} to="/dashboard/dp/datasets">
+          <ListItemButton sx={listItemButtonStyles('/dashboard/dp/datasets/management')} component={Link} to="/dashboard/dp/datasets/management">
             <ListItemText primary="Dataset Management" />
           </ListItemButton>
         </List>
       </Collapse>
 
-      <ListItemButton component={Link} to="/dashboard/he" onClick={() => onListItemClick('Homomorphic Encryption')}>
+      <ListItemButton
+        sx={{
+          borderRadius: 2, // Adjust for rounded corners
+          my: 1, // Margin top and bottom for spacing between items
+          mx: 1, // Margin left and right for spacing from the drawer edges
+          '.MuiListItemIcon-root': {
+            color: () => getIconColor('/dashboard/he'), // Use a function to determine the color based on the route
+          },
+          color: 'white',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.main,
+            '.MuiListItemIcon-root': {
+              color: 'white',
+            },
+            '.MuiListItemText-primary': {
+              color: 'white',
+            },
+          }
+        }}
+        onClick={() => handleClick('he', 'Homomorphic Encryption')}
+        component={Link}
+        to="/dashboard/he"
+      >
         <ListItemIcon>
           <ShoppingCartIcon />
         </ListItemIcon>
         <ListItemText primary="Homomorphic Encryption" />
+        {openSections.he ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
-      <ListItemButton component={Link} to="/dashboard/pe" onClick={() => onListItemClick('Polymorphic Encryption')}>
+
+      {/* Collapsible Section for Homomorphic Encryption */}
+      <Collapse in={openSections.he} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          <ListItemButton sx={listItemButtonStyles('/dashboard/he/whatishe')} component={Link} to="/dashboard/he/whatishe">
+            <ListItemText primary="What is Homomorphic Encryption?" />
+          </ListItemButton>
+        </List>
+      </Collapse>
+
+      <ListItemButton
+        sx={{
+          borderRadius: 2, // Adjust for rounded corners
+          my: 1, // Margin top and bottom for spacing between items
+          mx: 1, // Margin left and right for spacing from the drawer edges
+          '.MuiListItemIcon-root': {
+            color: () => getIconColor('/dashboard/pe'), // Use a function to determine the color based on the route
+          },
+          color: 'white',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.main,
+            '.MuiListItemIcon-root': {
+              color: 'white',
+            },
+            '.MuiListItemText-primary': {
+              color: 'white',
+            },
+          }
+        }}
+        onClick={() => handleClick('pe', 'Polymorphic Encryption')}
+        component={Link}
+        to="/dashboard/pe"
+      >
         <ListItemIcon>
           <PeopleIcon />
         </ListItemIcon>
         <ListItemText primary="Polymorphic Encryption" />
+        {openSections.pe ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
-      <ListItemButton component={Link} to="/dashboard/psi" onClick={() => onListItemClick('Private Set Intersection')}>
+
+      {/* Collapsible Section for Polymorphic Encryption */}
+      <Collapse in={openSections.pe} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          <ListItemButton sx={listItemButtonStyles('/dashboard/he/whatispe')} component={Link} to="/dashboard/he/whatispe">
+            <ListItemText primary="What is Polymorphic Encryption?" />
+          </ListItemButton>
+        </List>
+      </Collapse>
+
+      <ListItemButton
+        sx={{
+          borderRadius: 2, // Adjust for rounded corners
+          my: 1, // Margin top and bottom for spacing between items
+          mx: 1, // Margin left and right for spacing from the drawer edges
+          '.MuiListItemIcon-root': {
+            color: () => getIconColor('/dashboard/psi'), // Use a function to determine the color based on the route
+          },
+          color: 'white',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.main,
+            '.MuiListItemIcon-root': {
+              color: 'white',
+            },
+            '.MuiListItemText-primary': {
+              color: 'white',
+            },
+          }
+        }}
+        onClick={() => handleClick('psi', 'Private Set Intersection')}
+        component={Link}
+        to="/dashboard/psi"
+      >
         <ListItemIcon>
           <BarChartIcon />
         </ListItemIcon>
         <ListItemText primary="Private Set Intersection" />
+        {openSections.psi ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
-      <ListItemButton component={Link} to="/dashboard/smpc" onClick={() => onListItemClick('Secure Multiparty Computation')}>
+
+      {/* Collapsible Section for Private Set Intersection */}
+      <Collapse in={openSections.psi} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          <ListItemButton sx={listItemButtonStyles('/dashboard/he/whatispsi')} component={Link} to="/dashboard/he/whatispsi">
+            <ListItemText primary="What is Private Set Intersection?" />
+          </ListItemButton>
+        </List>
+      </Collapse>
+
+      <ListItemButton
+        sx={{
+          borderRadius: 2, // Adjust for rounded corners
+          my: 1, // Margin top and bottom for spacing between items
+          mx: 1, // Margin left and right for spacing from the drawer edges
+          '.MuiListItemIcon-root': {
+            color: () => getIconColor('/dashboard/smpc'), // Use a function to determine the color based on the route
+          },
+          color: 'white',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.main,
+            '.MuiListItemIcon-root': {
+              color: 'white',
+            },
+            '.MuiListItemText-primary': {
+              color: 'white',
+            },
+          }
+        }}
+        onClick={() => handleClick('smpc', 'Secure Multiparty Computation')}
+        component={Link}
+        to="/dashboard/smpc"
+      >
         <ListItemIcon>
           <LayersIcon />
         </ListItemIcon>
         <ListItemText primary="Secure Multiparty Computation" />
+        {openSections.smpc ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
+
+      {/* Collapsible Section for Secure Multiparty Computation */}
+      <Collapse in={openSections.smpc} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          <ListItemButton sx={listItemButtonStyles('/dashboard/he/whatissmpc')} component={Link} to="/dashboard/he/whatissmpc">
+            <ListItemText primary="What is Secure Multiparty Computation?" />
+          </ListItemButton>
+        </List>
+      </Collapse>
+
     </React.Fragment>
   );
 };
@@ -112,17 +320,18 @@ export const DataSetListItems = () => {
 
   return (
     <React.Fragment>
-      <ListSubheader component="div" inset>
+      {/* <ListSubheader component="div" inset>
         Data Sets
-      </ListSubheader>
+      </ListSubheader> */}
       {datasets.map((dataset, index) => (
         <ListItemButton key={index} component={Link} to={`/dashboard/dp/datasets/${dataset}`}>
-          <ListItemIcon>
+        <ListItemIcon sx={{ color: 'white' }}> {/* Set icon color to white */}
             <AssignmentIcon />
           </ListItemIcon>
           <ListItemText
             primary={dataset}
             sx={{
+              color: 'white',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',

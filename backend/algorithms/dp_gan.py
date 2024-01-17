@@ -66,7 +66,7 @@ class DPGAN(DPAlgorithm):
         return tf.abs(real_data_max - synthetic_data_max)
 
     def generate_synthetic_data(self, data, sample_size, epsilon, delta, lower_clip, upper_clip):
-        epochs = 25
+        epochs = 10
         batch_size = 100
         noise_dim = 1
         print_interval = 1
@@ -103,8 +103,8 @@ class DPGAN(DPAlgorithm):
         discriminator = self.build_discriminator()
 
         # Initial learning rates
-        lr_discriminator = 0.00099
-        lr_generator = 0.01
+        lr_discriminator = 0.000099
+        lr_generator = 0.001
 
         # Initial Optimizers
         dp_sum_query = GaussianSumQuery(l2_norm_clip, noise_multiplier)
@@ -184,13 +184,11 @@ class DPGAN(DPAlgorithm):
                     # Combine losses
                     combined_g_loss = avg_rating_loss + median_rating_loss + min_rating_loss + max_rating_loss + g_loss
                     # Compute and apply gradients
-                    g_gradients = gen_tape.gradient(combined_g_loss, generator.trainable_variables)
-                    non_dp_optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))
 
                 # Compute and apply gradients through standard optimizer
-                g_gradients = gen_tape.gradient(g_loss, generator.trainable_variables)
+                g_gradients = gen_tape.gradient(combined_g_loss, generator.trainable_variables)
                 non_dp_optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))
-                total_g_loss += g_loss.numpy()
+                total_g_loss += combined_g_loss.numpy()
                 total_d_loss += d_loss_value.numpy()
                 num_batches += 1
             
