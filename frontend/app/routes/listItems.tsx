@@ -209,7 +209,7 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
       {/* Collapsible Section for Polymorphic Encryption */}
       <Collapse in={openSections.pe} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          <ListItemButton sx={listItemButtonStyles('/dashboard/he/whatispe')} component={Link} to="/dashboard/he/whatispe">
+          <ListItemButton sx={listItemButtonStyles('/dashboard/pe/whatispe')} component={Link} to="/dashboard/pe/whatispe">
             <ListItemText primary="What is Polymorphic Encryption?" />
           </ListItemButton>
         </List>
@@ -248,7 +248,7 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
       {/* Collapsible Section for Private Set Intersection */}
       <Collapse in={openSections.psi} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          <ListItemButton sx={listItemButtonStyles('/dashboard/he/whatispsi')} component={Link} to="/dashboard/he/whatispsi">
+          <ListItemButton sx={listItemButtonStyles('/dashboard/psi/whatispsi')} component={Link} to="/dashboard/psi/whatispsi">
             <ListItemText primary="What is Private Set Intersection?" />
           </ListItemButton>
         </List>
@@ -287,7 +287,7 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
       {/* Collapsible Section for Secure Multiparty Computation */}
       <Collapse in={openSections.smpc} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          <ListItemButton sx={listItemButtonStyles('/dashboard/he/whatissmpc')} component={Link} to="/dashboard/he/whatissmpc">
+          <ListItemButton sx={listItemButtonStyles('/dashboard/smpc/whatissmpc')} component={Link} to="/dashboard/smpc/whatissmpc">
             <ListItemText primary="What is Secure Multiparty Computation?" />
           </ListItemButton>
         </List>
@@ -364,6 +364,5 @@ export const DataSetListItems = () => {
         </IconButton>
       </Toolbar>
     </React.Fragment>
-
   );
 };

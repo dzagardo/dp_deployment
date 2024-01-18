@@ -5,7 +5,7 @@ import { Box, Button, Container, Divider, FormControl, Grid, InputLabel, List, L
 import { requireUserId } from "~/session.server";
 import { getDataset, getDatasetListItems } from "~/models/dataset.server";
 import React from "react";
-import AlgorithmSelectorRemix from "./AlgorithmSelectorRemix";
+import AlgorithmSelectorRemix from "./AlgorithmSelectorTabular";
 import invariant from "tiny-invariant";
 import { updateDataset } from "~/models/dataset.server";
 

@@ -26,9 +26,17 @@ import DataGridDisplay from './DataGridDisplay';
 import Papa from 'papaparse';
 import DatasetStatistics from './DatasetStatistics';
 import AlgorithmSelector from './AlgorithmSelector';
+import { Outlet } from '@remix-run/react';
 
 function DashboardPE() {
-    return <div>Polymorphic Encryption</div>;
+    return (
+        <Box component="main" sx={{ /* styles */ }}>
+            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+                {/* Render the content of the current route */}
+                <Outlet />
+            </Container>
+        </Box>
+    )
 }
 
 export default DashboardPE;

@@ -15,11 +15,16 @@ import time
 from algorithm_registry import AlgorithmRegistry
 from algorithms.gaussian_mechanism import GaussianMechanism
 from algorithms.dp_gan import DPGAN
+from algorithms.dp_gan_images import DPGANImages
 from algorithms.laplace_mechanism import LaplaceMechanism
+from PIL import Image
+import base64
+
 
 # Register the algorithms
 AlgorithmRegistry.register_algorithm("Gaussian Mechanism", GaussianMechanism)
 AlgorithmRegistry.register_algorithm("DP-GAN", DPGAN)
+AlgorithmRegistry.register_algorithm("DP-GAN Images", DPGANImages)
 AlgorithmRegistry.register_algorithm("Laplace Mechanism", LaplaceMechanism)
 
 app = Flask(__name__)
@@ -66,7 +71,65 @@ def get_file(filename):
     except Exception as e:
         logging.error(f"An error occurred while retrieving the file: {e}")
         return jsonify({"error": str(e)}), 500
-    
+
+# Function to convert image to base64
+def image_to_base64(image: np.ndarray) -> str:
+    pil_image = Image.fromarray(image)
+    buffered = io.BytesIO()
+    pil_image.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    return img_str
+
+@app.route('/get_train_images/<filename>', methods=['GET'])
+def get_train_images(filename):
+    file_path = os.path.join('data', filename)
+    try:
+        if os.path.exists(file_path):
+            images = np.load(file_path)[:50]  # Modify this line
+            images_base64 = [image_to_base64(img) for img in images]
+            return jsonify(images_base64)
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get_train_labels/<filename>', methods=['GET'])
+def get_train_labels(filename):
+    file_path = os.path.join('data', filename)
+    try:
+        if os.path.exists(file_path):
+            labels = np.load(file_path)[:50]  # Modify this line
+            return jsonify(labels.tolist())
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get_test_images/<filename>', methods=['GET'])
+def get_test_images(filename):
+    file_path = os.path.join('data', filename)
+    try:
+        if os.path.exists(file_path):
+            images = np.load(file_path)[:50]  # Modify this line
+            images_base64 = [image_to_base64(img) for img in images]
+            return jsonify(images_base64)
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get_test_labels/<filename>', methods=['GET'])
+def get_test_labels(filename):
+    file_path = os.path.join('data', filename)
+    try:
+        if os.path.exists(file_path):
+            labels = np.load(file_path)[:50]  # Modify this line
+            return jsonify(labels.tolist())
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/get_column_names/<filename>', methods=['GET'])
 def get_column_names(filename):
     try:
@@ -173,7 +236,6 @@ def generate_data(algorithm_name, filename):
         original_data = pd.read_csv(uploaded_file_path)
         sample_size = len(original_data)
 
-
         dp_algorithm = AlgorithmRegistry.get_algorithm(algorithm_name)
         if not dp_algorithm:
             logging.error(f"Algorithm not found in registry: {algorithm_name}")
@@ -218,6 +280,136 @@ def generate_data(algorithm_name, filename):
     except Exception as e:
         logging.error(f"An error occurred during data generation: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/generate_image_data/<algorithm_name>', methods=['POST'])
+def generate_image_data(algorithm_name):
+    try:
+        logging.info(f"Request to generate data using {algorithm_name}")
+
+        # Parse request data
+        data = request.get_json()
+        epsilon = data.get('epsilon', 1.0)
+        delta = data.get('delta', 1e-5)
+        lower_clip = data.get('lowerClip', 0)
+        upper_clip = data.get('upperClip', 5)
+        train_images_file = data.get('trainImages')
+        train_labels_file = data.get('trainLabels')
+        test_images_file = data.get('testImages')
+        test_labels_file = data.get('testLabels')
+
+        # Validate the file paths
+        if not all([train_images_file, train_labels_file, test_images_file, test_labels_file]):
+            logging.error("One or more file paths are missing")
+            return jsonify({"error": "One or more file paths are missing"}), 400
+
+        dp_algorithm = AlgorithmRegistry.get_algorithm(algorithm_name)
+        if not dp_algorithm:
+            logging.error(f"Algorithm not found in registry: {algorithm_name}")
+            raise ValueError(f"Algorithm {algorithm_name} not found in registry")
+
+        logging.info(f"Algorithm retrieved: {algorithm_name}")
+
+        # Assuming these are file paths, you need to load the data from these files
+        # Here's a simplified example, your actual loading will depend on your file format
+        train_images = load_images(train_images_file)
+        train_labels = load_labels(train_labels_file)
+        test_images = load_images(test_images_file)
+        test_labels = load_labels(test_labels_file)
+
+        # Assume you have the same number of images and labels
+        sample_size = len(train_images)
+
+        # Load only train images and labels
+        train_images = load_images(train_images_file)
+        train_labels = load_labels(train_labels_file)
+
+        # Generate synthetic data
+        synthetic_train_images, synthetic_train_labels = dp_algorithm.generate_synthetic_data(
+            train_images, train_labels, 100, epsilon, delta, lower_clip, upper_clip
+        )
+
+        # Save only train images and labels
+        save_paths = save_synthetic_data(synthetic_train_images, synthetic_train_labels)
+
+        # Prepare response with only train data paths
+        response_data = {
+            "message": "Synthetic train image data generated successfully.",
+            "train_images_path": save_paths['train_images_dir'],
+            "train_labels_file": save_paths['train_labels_file']
+        }
+
+        return jsonify(response_data), 200
+    except Exception as e:
+        logging.error(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+def save_synthetic_data(synthetic_train_images, synthetic_train_labels):
+    # Define the directories for saving the data
+    train_images_dir = 'data/train_images'
+    train_labels_dir = 'data/train_labels.csv'
+
+    # Create the directories if they don't exist
+    os.makedirs(train_images_dir, exist_ok=True)
+
+    # Save train images and labels
+    train_labels_list = []
+    for index, (image, label) in enumerate(zip(synthetic_train_images, synthetic_train_labels)):
+        try:
+            # Reshape image if it's grayscale
+            if image.shape[-1] == 1:
+                image = image.reshape(image.shape[0], image.shape[1])
+
+            # Convert to PIL image and save
+            img = Image.fromarray(image.astype(np.uint8))
+            img.save(os.path.join(train_images_dir, f'train_image_{index}.png'))
+            train_labels_list.append({'id': index, 'label': label})
+        except Exception as e:
+            print(f"Error saving image {index}: {e}")
+    
+    # Save train labels to CSV
+    pd.DataFrame(train_labels_list).to_csv(train_labels_dir, index=False)
+
+    # Return only the paths for train images and labels
+    return {
+        'train_images_dir': train_images_dir,
+        'train_labels_file': train_labels_dir
+    }
+
+def load_images(file_path):
+    """
+    Load images from a .npy file.
+
+    Parameters:
+    file_path (str): The path to the .npy file containing the images.
+
+    Returns:
+    np.array: An array of images loaded from the .npy file.
+    """
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file_path} does not exist.")
+
+    # Load the images from the .npy file
+    images = np.load(file_path)
+
+    return images
+
+def load_labels(file_path):
+    """
+    Load labels from a .npy file.
+
+    Parameters:
+    file_path (str): Path to the .npy file containing labels.
+
+    Returns:
+    numpy.ndarray: Array of labels.
+    """
+    try:
+        labels = np.load(file_path)
+        return labels
+    except Exception as e:
+        logging.error(f"Failed to load labels from {file_path}: {e}")
+        raise
 
 @app.route('/api/datasets/mean_rating/<dataset_id>/<algorithm_name>', methods=['GET'])
 def get_noisy_mean_rating(dataset_id, algorithm_name):

@@ -9,16 +9,15 @@ import FileUploader from './fileuploader';
 import DataGridDisplay from './DataGridDisplay';
 import Papa from 'papaparse';
 import DatasetStatistics from './DatasetStatistics';
-import AlgorithmSelectorRemix from './AlgorithmSelectorRemix';
+import AlgorithmSelectorRemix from './AlgorithmSelectorTabular';
 import { Box } from '@mui/material';
 import { ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node';
 import { requireUserId } from '~/session.server';
 import { getDatasetListItems } from '~/models/dataset.server';
 import { ActionFunction } from '@remix-run/node';
 import { createDataset } from '~/models/dataset.server';
-
-
 import { useLoaderData } from '@remix-run/react';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export const action: ActionFunction = async ({ request }) => {
     console.log('Action function called');
@@ -104,7 +103,7 @@ function TabularDataView() {
     const [upperClip, setUpperClip] = useState<number | ''>('');
     const [selectedColumn, setSelectedColumn] = useState('');
     const { datasetListItems, userId } = useLoaderData<typeof loader>();
-
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleColumnSelect = (columnName: string) => {
         setSelectedColumn(columnName);
@@ -163,6 +162,8 @@ function TabularDataView() {
             console.error('No algorithm selected or invalid epsilon/delta values');
             return;
         }
+        setIsLoading(true); // Start loading
+
         if (filename.trim() !== '') {
             try {
                 console.log('Sending data with:', {
@@ -189,37 +190,51 @@ function TabularDataView() {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                
-                const result = await response.json();
-                console.log('Synthetic data generation result:', result);
 
-                const formData = new FormData();
-                formData.append('filename', result.file_name);
-                formData.append('filePath', result.file_path);
-                formData.append('privacyBudget', String(epsilon));  // FormData expects strings
-                formData.append('fileType', 'csv');
+                // Check if the response is JSON
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const result = await response.json();
+                    console.log('Synthetic data generation result:', result);
 
-                // Assuming result contains the filename and filePath
-                // Now post to your Remix action to create a new dataset
-                const newDatasetResponse = await fetch('/dashboard/dp/datasets/new', {
-                    method: 'POST',
-                    body: formData  // Send FormData instead of JSON
-                });
+                    const formData = new FormData();
+                    formData.append('filename', result.file_name);
+                    formData.append('filePath', result.file_path);
+                    formData.append('privacyBudget', String(epsilon));
+                    formData.append('fileType', 'csv');
 
-                if (!newDatasetResponse.ok) {
-                    // Handle the error
-                    const errorText = await newDatasetResponse.text();
-                    console.error('Error creating new dataset:', errorText);
+                    console.log(formData);
+                    console.log(result);
+
+                    const newDatasetResponse = await fetch('/dashboard/dp/datasets/new', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (newDatasetResponse.ok) {
+                        // If response is OK, it's likely a redirect, get the new location
+                        const newLocation = newDatasetResponse.headers.get('Location');
+                        if (newLocation) {
+                            // Programmatically navigate to the new URL
+                            window.location.href = newLocation;
+                        }
+                    } else {
+                        // Handle error
+                        const errorText = await newDatasetResponse.text();
+                        console.error('Error creating new dataset:', errorText);
+                    }
                 } else {
-                    const newDatasetResult = await newDatasetResponse.json();
-                    console.log('New dataset created:', newDatasetResult);
+                    const text = await response.text();
+                    throw new Error(`Unexpected response type: ${text}`);
                 }
-
             } catch (error) {
                 console.error('Error generating synthetic data:', error);
+            } finally {
+                setIsLoading(false); // Stop loading regardless of success or error
             }
         } else {
             console.error('No file selected or invalid file name');
+            setIsLoading(false); // Stop loading as there was no file selected
         }
     };
 
@@ -252,36 +267,20 @@ function TabularDataView() {
             </Box>
             <Grid container spacing={2}> {/* Adjusted spacing */}
                 {/* AlgorithmSelector */}
-                <Grid item xs={12} md={8} lg={12}>
-                    <Paper
-                        sx={{
-                            p: 2,
-                            display: 'flex',
-                            flexDirection: 'row',
-                            height: '100%',
-                            justifyContent: 'space-between'
-                        }}
-                    >
-                        <AlgorithmSelectorRemix datasetListItems={datasetListItems} onAlgorithmSelect={handleAlgorithmSelect} onGenerate={() => handleGenerateData(selectedFile)} filename={selectedFile} onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} />
+                <Grid item xs={12} md={8} lg={12}> {/* Adjusted size to take up 9/12 of the space at large screen sizes */}
+                    <Paper sx={{ p: 2, display: 'flex', flexDirection: 'row', height: '100%', justifyContent: 'space-between' }}>
+                        <AlgorithmSelectorRemix datasetListItems={datasetListItems} onAlgorithmSelect={handleAlgorithmSelect} onGenerate={handleGenerateData} filename={selectedFile} onSelectFile={onSelectFile} onDataFetched={handleDataFetched} setSelectedFile={setSelectedFile} onColumnSelect={handleColumnSelect} isLoading={isLoading} />
                     </Paper>
                 </Grid>
                 {/* DataGrid */}
-                <Grid item xs={9}>
+                <Grid item xs={12} md={4} lg={9}> {/* Adjusted size to take up 9/12 of the space at large screen sizes */}
                     <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
                         <DataGridDisplay data={gridData} />
                     </Paper>
                 </Grid>
                 {/* Dataset Stats */}
-                <Grid item xs={12} md={6} lg={3}> {/* Column 1 */}
-                    <Paper
-                        sx={{
-                            p: 2,
-                            display: 'flex',
-                            flexDirection: 'row',
-                            height: '100%',
-                            justifyContent: 'space-between'
-                        }}
-                    >
+                <Grid item xs={12} md={6} lg={3}> {/* This can remain as a column */}
+                    <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                         <DatasetStatistics data={ratings} />
                     </Paper>
                 </Grid>

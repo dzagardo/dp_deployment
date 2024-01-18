@@ -12,7 +12,6 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { MainListItems, DataSetListItems } from './listItems';
 import DashboardHE from './dashboard.he';
 import DashboardDP from './dashboard.dp';
@@ -40,7 +39,7 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }):
   return json({ userId });
 };
 
-const drawerWidth: number = 320;
+const drawerWidth: number = 360;
 
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
@@ -139,10 +138,10 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
         duration: theme.transitions.duration.enteringScreen,
       }),
       boxSizing: 'border-box',
-      // borderRadius: '0px 15px 15px 0px', // Rounded corners on the right side
       boxShadow: theme.shadows[3], // Apply some shadow for an inset effect
       marginBottom: '20px', // Bottom margin
       background: `linear-gradient(180deg, ${gradientStart} 0%, ${gradientEnd} 100%)`, // Gradient background
+      overflowY: 'auto', // Make overflow scrollable
       ...(!open && {
         overflowX: 'hidden',
         transition: theme.transitions.create('width', {
@@ -245,23 +244,33 @@ export default function Dashboard() {
           </form>
         </Toolbar>
       </AppBar>
+
       <Drawer variant="permanent" open={open}>
         <Divider />
-        <Paper
-          elevation={3} // you can adjust the elevation for more or less shadow
+        <Box
           sx={{
-            overflow: 'auto',
-            backgroundColor: 'transparent', // Use a transparent background
-            borderRadius: '0px 15px 15px 0px', // This maintains the rounded corners on the paper
+            overflow: 'auto', // Apply overflow here for the entire drawer content
+            backgroundColor: 'transparent',
           }}
         >
-          <List component="nav">
+          <List
+            component="nav"
+            sx={{
+              overflowY: 'auto', // This will enable scrolling on the List
+              height: 'calc(100vh - [ToolbarHeight]px)', // Adjust [ToolbarHeight] with actual height
+              '& .MuiListItemButton-root': {
+                // Style for ListItemButton, if necessary
+              },
+              // ...other styles
+            }}
+          >
             <MainListItems onListItemClick={(viewName) => setCurrentView(viewName)} />
             <Divider sx={{ my: 1 }} />
             <DataSetListItems />
           </List>
-        </Paper>
+        </Box>
       </Drawer>
+
       <Box
         component="main"
         sx={{

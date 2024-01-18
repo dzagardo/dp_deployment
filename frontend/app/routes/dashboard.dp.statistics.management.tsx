@@ -7,7 +7,7 @@ import { useLoaderData, Link } from "@remix-run/react";
 import { getDatasets } from "~/models/dataset.server"; // Adjust the import path to your actual function
 import FileUploader from "./fileuploader";
 import { useState } from "react";
-import AlgorithmSelectorRemix from "./AlgorithmSelectorRemix";
+import AlgorithmSelectorRemix from "./AlgorithmSelectorTabular";
 
 export const loader: LoaderFunction = async () => {
   try {

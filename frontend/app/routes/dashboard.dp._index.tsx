@@ -43,17 +43,17 @@ const DashboardIndex = () => {
       
       <List component="nav">
         <StyledListItemButton>
-          <StyledLink to="dp/tabulardata">
+          <StyledLink to="tabulardata">
             Tabular Data
           </StyledLink>
         </StyledListItemButton>
         <StyledListItemButton>
-          <StyledLink to="dp/imagedata">
+          <StyledLink to="imagedata">
             Image Data
           </StyledLink>
         </StyledListItemButton>
         <StyledListItemButton>
-          <StyledLink to="dp/syntheticdatasets">
+          <StyledLink to="syntheticdatasets">
             Synthetic Datasets
           </StyledLink>
         </StyledListItemButton>
