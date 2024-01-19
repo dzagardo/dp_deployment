@@ -75,7 +75,7 @@ class DPGANImages(DPAlgorithm):
         train_images = np.expand_dims(train_images, axis=-1)
         
         # Hyperparameters
-        epochs = 10
+        epochs = 50
         batch_size = 256
         noise_dim = 100
         log_interval = 10

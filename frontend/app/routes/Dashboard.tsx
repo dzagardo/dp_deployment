@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { json, redirect, ActionFunction, LoaderFunction } from '@remix-run/node';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
@@ -23,7 +23,7 @@ import { createDataset } from '~/models/dataset.server';
 import { useLoaderData } from "@remix-run/react";
 import { Paper } from '@mui/material';
 import { useLocation } from '@remix-run/react'; // Make sure to import from @remix-run/react
-
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 // Type for the loader data
 type LoaderData = {
@@ -162,6 +162,11 @@ export default function Dashboard() {
   const { userId } = useLoaderData<LoaderData>(); // Specify the type of loader data
   const location = useLocation(); // Use the useLocation hook to get the location object
   const [currentView, setCurrentView] = useState('');
+  const appBarRef = useRef<HTMLDivElement>(null);
+  const [appBarHeight, setAppBarHeight] = useState(64);
+  const [mainContentHeight, setMainContentHeight] = useState(0);
+  // At the top of your component where you define your other states
+  const [listHeight, setListHeight] = useState(0); // Initialize with 0 or any default value
 
   // Function to determine the initial view based on the current path
   const getViewFromPath = (path: string) => {
@@ -175,9 +180,21 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Set the current view based on the current route when the component mounts
-    setCurrentView(getViewFromPath(location.pathname));
-  }, [location]); // Only re-run the effect if the location changes
+    const handleResize = () => {
+      // Use a fixed AppBar height
+      const appBarHeight = 156; // or 56 for mobile if you want to be responsive
+      const availableHeight = window.innerHeight - appBarHeight;
+
+      setListHeight(availableHeight);
+    };
+
+    // Set the height on mount and add event listener for window resize
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    // Clean up event listener
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Render the current view based on state
   const renderCurrentView = () => {
@@ -205,7 +222,7 @@ export default function Dashboard() {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <AppBar position="absolute" open={open}>
+      <AppBar position="absolute" open={open} ref={appBarRef}>
         <Toolbar
           sx={{
             pr: '24px', // keep right padding when drawer closed
@@ -230,7 +247,7 @@ export default function Dashboard() {
             noWrap
             sx={{ flexGrow: 1 }}
           >
-            The Privacy Toolbox
+
           </Typography>
           <form action={`/user/${userId}`} method="get">
             <Button type="submit" color="inherit">
@@ -247,28 +264,57 @@ export default function Dashboard() {
 
       <Drawer variant="permanent" open={open}>
         <Divider />
-        <Box
+        <Paper
+          elevation={3}
           sx={{
-            overflow: 'auto', // Apply overflow here for the entire drawer content
-            backgroundColor: 'transparent',
+            overflow: 'auto', // Enable vertical scrolling
+            height: '100%', // Set height to fill the drawer
+            backgroundColor: 'transparent', // Set background color as needed
           }}
         >
+          {/* Logo container */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderRadius: '20px',
+              backgroundColor: 'black',
+              margin: '5px',
+              width: 'auto',
+              padding: '8px 2px 8px 24px',
+            }}
+          >
+            {/* Logo image */}
+            <Typography fontWeight="bold" color="white" variant="h6" noWrap component="div">
+              The Privacy Toolbox
+            </Typography>
+            <Toolbar
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                px: [1],
+              }}
+            >
+              <IconButton onClick={toggleDrawer}>
+                <ChevronLeftIcon sx={{ color: "white" }} />
+              </IconButton>
+            </Toolbar>
+          </Box>
           <List
             component="nav"
             sx={{
-              overflowY: 'auto', // This will enable scrolling on the List
-              height: 'calc(100vh - [ToolbarHeight]px)', // Adjust [ToolbarHeight] with actual height
-              '& .MuiListItemButton-root': {
-                // Style for ListItemButton, if necessary
-              },
-              // ...other styles
+              overflowY: 'auto',
+              height: `${listHeight}px`, // Use state variable for height
+              // Add styles for ListItemButton and other elements if necessary
             }}
           >
             <MainListItems onListItemClick={(viewName) => setCurrentView(viewName)} />
             <Divider sx={{ my: 1 }} />
             <DataSetListItems />
           </List>
-        </Box>
+        </Paper>
       </Drawer>
 
       <Box

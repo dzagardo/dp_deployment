@@ -33,24 +33,19 @@ function WhatIsHE() {
         <Box component="main" sx={{ /* styles */ }}>
             <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
                 <Typography variant="h4" gutterBottom>
-                    Generating Private Tabular Data
+                    Homomorphic Encryption
                 </Typography>
                 <Box sx={{ marginBottom: 2 }}>
                     <Paper sx={{ padding: 2 }}>
                         <Typography variant="h6" gutterBottom>
-                            What is Synthetic Tabular Data?
+                            What is Homomorphic Encryption?
                         </Typography>
                         <Typography paragraph>
-                            Synthetic tabular data is artificially generated data that mimics the statistical properties of real-world data while preserving privacy. It's used to enable data analysis and machine learning without exposing sensitive information. Two common methods for generating private synthetic datasets are the Laplacian and Gaussian mechanisms, which are foundational in the realm of differential privacy.
-                        </Typography>
-                        <Typography variant="h6" gutterBottom>
-                            Laplacian and Gaussian Mechanisms
-                        </Typography>
-                        <Typography paragraph>
-                            The Laplacian mechanism adds Laplacian noise to the true query results, calibrated to the sensitivity of the query and the desired level of ε (epsilon), representing the privacy budget. On the other hand, the Gaussian mechanism adds Gaussian noise and is suitable when the privacy budget is defined as (ε, δ), where δ is a small probability of additional privacy loss. Both mechanisms aim to obfuscate the data enough to prevent the re-identification of individuals while maintaining the utility of the data for analysis. When applied to tabular data in CSV files, these mechanisms help generate datasets that are statistically similar to the original but with privacy guarantees, allowing for safer data sharing and analysis.
+                            Homomorphic Encryption allows computations to be performed directly on encrypted data. The data is never decrypted during the process, ensuring its privacy. This method is particularly useful for sensitive data like medical or financial records.
                         </Typography>
                     </Paper>
-                </Box>            </Container>
+                </Box>
+            </Container>
         </Box>
     );
 }

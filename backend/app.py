@@ -18,19 +18,30 @@ from algorithms.dp_gan import DPGAN
 from algorithms.dp_gan_images import DPGANImages
 from algorithms.laplace_mechanism import LaplaceMechanism
 from PIL import Image
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+import torch
 import base64
 
-
+### DP ALGORITHM REGISTRY ###
 # Register the algorithms
 AlgorithmRegistry.register_algorithm("Gaussian Mechanism", GaussianMechanism)
 AlgorithmRegistry.register_algorithm("DP-GAN", DPGAN)
 AlgorithmRegistry.register_algorithm("DP-GAN Images", DPGANImages)
 AlgorithmRegistry.register_algorithm("Laplace Mechanism", LaplaceMechanism)
 
+### BACKEND SERVER ###
+# Start app with Cross-origin Resource Sharing
 app = Flask(__name__)
 app.secret_key = os.urandom(16)  # or a hard-coded secret key
 CORS(app, supports_credentials=True)
 logging.basicConfig(level=logging.INFO)
+
+### CHATBOT ###
+# Load model and initalize pipeline
+# model = AutoModelForCausalLM.from_pretrained("./path_to_saved_model")
+tokenizer = AutoTokenizer.from_pretrained("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+device = "cuda" if torch.cuda.is_available() else "cpu"
+pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", device=device)
 
 @app.route('/')
 def home():
@@ -611,6 +622,53 @@ def get_noisy_statistic(operation):
         })
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.json
+    user_message = data['message']
+
+    # Format the message for the pipeline
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a friendly AI assistant.",
+        },
+        {"role": "user", "content": user_message},
+    ]
+
+    # Apply chat template
+    prompt = pipe.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+
+    # Generate a response using the pipeline
+    outputs = pipe(prompt, max_new_tokens=256, do_sample=True, temperature=0.7, top_k=50, top_p=0.95)
+    full_response = outputs[0]["generated_text"]
+
+    # Extract the chatbot's reply from the full response
+    # Split the response at "</s>" and take the last part
+    reply_parts = full_response.split("<|assistant|>")
+    chatbot_reply = reply_parts[-1].strip() if len(reply_parts) > 1 else full_response.strip()
+
+    print(chatbot_reply)
+
+    return jsonify({'reply': chatbot_reply})
+
+def extract_reply(full_text, user_message):
+    """
+    Extracts the chatbot's reply from the full generated text.
+    This function needs to be tailored based on the structure of the full_text.
+    """
+    # Example logic (this may need to be adjusted based on the actual response format)
+    try:
+        # Find the end of the user message in the response
+        start_index = full_text.find(user_message) + len(user_message)
+        # Extract everything after the user message
+        return full_text[start_index:].strip()
+    except Exception as e:
+        # In case of an error, log it and return the full text or an error message
+        print(f"Error extracting reply: {e}")
+        return full_text  # or return "Error processing response"
+
 
 if __name__ == '__main__':
     app.run(debug=False)  # Ensure debug mode is set to False here

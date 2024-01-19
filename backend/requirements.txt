@@ -8,3 +8,5 @@ torch
 torchvision
 flask-cors
 tensorflow-privacy
+transformers
+accelerate

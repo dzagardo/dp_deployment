@@ -293,6 +293,35 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
         </List>
       </Collapse>
 
+      <ListItemButton
+        sx={{
+          borderRadius: 2, // Adjust for rounded corners
+          my: 1, // Margin top and bottom for spacing between items
+          mx: 1, // Margin left and right for spacing from the drawer edges
+          '.MuiListItemIcon-root': {
+            color: () => getIconColor('/dashboard/assistant'), // Use a function to determine the color based on the route
+          },
+          color: 'white',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.main,
+            '.MuiListItemIcon-root': {
+              color: 'white',
+            },
+            '.MuiListItemText-primary': {
+              color: 'white',
+            },
+          }
+        }}
+        // onClick={() => handleClick('dp', 'Differential Privacy')}
+        component={Link}
+        to="/dashboard/assistant"
+      >
+        <ListItemIcon>
+          <DashboardIcon />
+        </ListItemIcon>
+        <ListItemText primary="Virtual Assistant" />
+      </ListItemButton>
+
     </React.Fragment>
   );
 };
@@ -349,20 +378,6 @@ export const DataSetListItems = () => {
           />
         </ListItemButton>
       ))}
-      <Toolbar
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          px: [1],
-        }}
-      >
-        <IconButton onClick={toggleDrawer}>
-          <ChevronLeftIcon sx={{
-            color: "white",
-          }} />
-        </IconButton>
-      </Toolbar>
     </React.Fragment>
   );
 };

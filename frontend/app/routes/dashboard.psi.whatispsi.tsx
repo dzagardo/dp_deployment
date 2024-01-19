@@ -33,21 +33,15 @@ function WhatIsPSI() {
         <Box component="main" sx={{ /* styles */ }}>
             <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
                 <Typography variant="h4" gutterBottom>
-                    Generating Private Tabular Data
+                    Private Set Intersection
                 </Typography>
                 <Box sx={{ marginBottom: 2 }}>
                     <Paper sx={{ padding: 2 }}>
                         <Typography variant="h6" gutterBottom>
-                            What is Synthetic Tabular Data?
+                            What is Private Set Intersection?
                         </Typography>
                         <Typography paragraph>
-                            Synthetic tabular data is artificially generated data that mimics the statistical properties of real-world data while preserving privacy. It's used to enable data analysis and machine learning without exposing sensitive information. Two common methods for generating private synthetic datasets are the Laplacian and Gaussian mechanisms, which are foundational in the realm of differential privacy.
-                        </Typography>
-                        <Typography variant="h6" gutterBottom>
-                            Laplacian and Gaussian Mechanisms
-                        </Typography>
-                        <Typography paragraph>
-                            The Laplacian mechanism adds Laplacian noise to the true query results, calibrated to the sensitivity of the query and the desired level of ε (epsilon), representing the privacy budget. On the other hand, the Gaussian mechanism adds Gaussian noise and is suitable when the privacy budget is defined as (ε, δ), where δ is a small probability of additional privacy loss. Both mechanisms aim to obfuscate the data enough to prevent the re-identification of individuals while maintaining the utility of the data for analysis. When applied to tabular data in CSV files, these mechanisms help generate datasets that are statistically similar to the original but with privacy guarantees, allowing for safer data sharing and analysis.
+                            PSI is a cryptographic technique that allows two parties to compute the intersection of their sets without revealing anything else about the sets to each other. In the context of PPML, PSI can be useful when two organizations wish to collaborate on machine learning projects without sharing their actual data. For example, two medical institutions might want to train a model on patient data to identify common patterns in diseases. Using PSI, they can find common patients (or common data attributes) without exposing their entire datasets to each other. This ensures that sensitive or private data remains confidential.
                         </Typography>
                     </Paper>
                 </Box>
