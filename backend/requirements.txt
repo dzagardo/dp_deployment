@@ -10,3 +10,4 @@ flask-cors
 tensorflow-privacy
 transformers
 accelerate
+flask-socketio

@@ -85,12 +85,14 @@ const AlgorithmSelectorRemix: React.FC<AlgorithmSelectorProps> = ({
     setFileSelection(file); // Changed this line to use the new setter
     onSelectFile(file);
 
+
     // Fetch the CSV content
     const response = await fetch(`http://localhost:5000/get_file/${file}`);
     const text = await response.text();
 
     // Fetch the column names for the selected file
     const colResponse = await fetch(`http://localhost:5000/get_column_names/${file}`);
+    console.log(colResponse);
     if (colResponse.ok) {
       const columns = await colResponse.json();
       setColumnNames(columns); // Save the column names in the state

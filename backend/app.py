@@ -21,6 +21,8 @@ from PIL import Image
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
 import base64
+from flask_socketio import SocketIO, emit
+from time import sleep
 
 ### DP ALGORITHM REGISTRY ###
 # Register the algorithms
@@ -30,10 +32,15 @@ AlgorithmRegistry.register_algorithm("DP-GAN Images", DPGANImages)
 AlgorithmRegistry.register_algorithm("Laplace Mechanism", LaplaceMechanism)
 
 ### BACKEND SERVER ###
-# Start app with Cross-origin Resource Sharing
 app = Flask(__name__)
 app.secret_key = os.urandom(16)  # or a hard-coded secret key
-CORS(app, supports_credentials=True)
+
+# Enable CORS for all routes if necessary
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
+# Initialize SocketIO with CORS enabled
+socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
+
 logging.basicConfig(level=logging.INFO)
 
 ### CHATBOT ###
@@ -625,33 +632,31 @@ def get_noisy_statistic(operation):
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    data = request.json
-    user_message = data['message']
+    # Start the WebSocket event, this will be picked up by the 'message' event handler
+    return jsonify({'reply': "WebSocket event started"})
 
-    # Format the message for the pipeline
+@socketio.on('message')
+def handle_message(data):
+    user_message = data['message']
+    
+    # Process the user_message just like before
     messages = [
-        {
-            "role": "system",
-            "content": "You are a friendly AI assistant.",
-        },
+        {"role": "system", "content": "You are a friendly AI assistant."},
         {"role": "user", "content": user_message},
     ]
-
     # Apply chat template
     prompt = pipe.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-
     # Generate a response using the pipeline
     outputs = pipe(prompt, max_new_tokens=256, do_sample=True, temperature=0.7, top_k=50, top_p=0.95)
     full_response = outputs[0]["generated_text"]
-
-    # Extract the chatbot's reply from the full response
-    # Split the response at "</s>" and take the last part
     reply_parts = full_response.split("<|assistant|>")
     chatbot_reply = reply_parts[-1].strip() if len(reply_parts) > 1 else full_response.strip()
-
     print(chatbot_reply)
-
-    return jsonify({'reply': chatbot_reply})
+    emit('response', {'word': '<NEW_MESSAGE>'})  # Start of a new message
+    for char in chatbot_reply:  # Iterate through characters instead of words
+        print(char)
+        emit('response', {'char': char})  # Emit the character
+        sleep(0.1)
 
 def extract_reply(full_text, user_message):
     """
@@ -667,8 +672,7 @@ def extract_reply(full_text, user_message):
     except Exception as e:
         # In case of an error, log it and return the full text or an error message
         print(f"Error extracting reply: {e}")
-        return full_text  # or return "Error processing response"
-
+        return full_text  # or return "Error processing response""
 
 if __name__ == '__main__':
-    app.run(debug=False)  # Ensure debug mode is set to False here
+    socketio.run(app, debug=True)
