@@ -34,10 +34,11 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
     pe: false,
     psi: false,
     smpc: false,
+    va: false,
     // Add more sections as needed
   });
 
-  type SectionKey = 'dp' | 'he' | 'pe' | 'psi' | 'smpc'; // Add more keys as needed
+  type SectionKey = 'dp' | 'he' | 'pe' | 'psi' | 'smpc' | 'va'; // Add more keys as needed
 
   // Update handleClick to also set the current view
   const handleClick = (section: SectionKey, viewName: string) => {
@@ -106,8 +107,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('dp', 'Differential Privacy')}
-        component={Link}
-        to="/dashboard/dp"
+        // component={Link}
+        // to="/dashboard/dp"
       >
         <ListItemIcon>
           <DashboardIcon />
@@ -157,8 +158,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('he', 'Homomorphic Encryption')}
-        component={Link}
-        to="/dashboard/he"
+        // component={Link}
+        // to="/dashboard/he"
       >
         <ListItemIcon>
           <ShoppingCartIcon />
@@ -196,8 +197,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('pe', 'Polymorphic Encryption')}
-        component={Link}
-        to="/dashboard/pe"
+        // component={Link}
+        // to="/dashboard/pe"
       >
         <ListItemIcon>
           <PeopleIcon />
@@ -235,8 +236,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('psi', 'Private Set Intersection')}
-        component={Link}
-        to="/dashboard/psi"
+        // component={Link}
+        // to="/dashboard/psi"
       >
         <ListItemIcon>
           <BarChartIcon />
@@ -274,8 +275,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('smpc', 'Secure Multiparty Computation')}
-        component={Link}
-        to="/dashboard/smpc"
+        // component={Link}
+        // to="/dashboard/smpc"
       >
         <ListItemIcon>
           <LayersIcon />
@@ -312,7 +313,7 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
             },
           }
         }}
-        // onClick={() => handleClick('dp', 'Differential Privacy')}
+        onClick={() => handleClick('va', 'Virtual Assistant')}
         component={Link}
         to="/dashboard/assistant"
       >

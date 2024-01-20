@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as RouterLink } from '@remix-run/react';
+import { Outlet, Link as RouterLink } from '@remix-run/react';
 import { Typography, List, Paper, styled } from '@mui/material';
 import ListItemButton from '@mui/material/ListItemButton';
 
@@ -33,33 +33,7 @@ const StyledLink = styled(RouterLink)(({ theme }) => ({
 
 const DashboardIndex = () => {
   return (
-    <StyledPaper elevation={3}>
-      <StyledTypography variant="h4">
-        Welcome to the Dashboard
-      </StyledTypography>
-      <Typography variant="body1" paragraph>
-        Select a category from the navigation to get started.
-      </Typography>
-      
-      <List component="nav">
-        <StyledListItemButton>
-          <StyledLink to="tabulardata">
-            Tabular Data
-          </StyledLink>
-        </StyledListItemButton>
-        <StyledListItemButton>
-          <StyledLink to="imagedata">
-            Image Data
-          </StyledLink>
-        </StyledListItemButton>
-        <StyledListItemButton>
-          <StyledLink to="syntheticdatasets">
-            Synthetic Datasets
-          </StyledLink>
-        </StyledListItemButton>
-        {/* Add more links to other sub-routes as needed */}
-      </List>
-    </StyledPaper>
+    <div></div>
   );
 };
 

@@ -46,7 +46,7 @@ const ChatBubble: React.FC<ChatMessage> = ({ sender, text }) => {
   );
 };
 
-function DashboardAssistantDisplay() {
+function VirtualAssistantDisplay() {
   const [userInput, setUserInput] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
@@ -117,4 +117,4 @@ function DashboardAssistantDisplay() {
   );
 }
 
-export default DashboardAssistantDisplay;
+export default VirtualAssistantDisplay;

@@ -8,7 +8,7 @@ import { Outlet } from '@remix-run/react';
 import DashboardAssistantDisplay from './dashboard.assistant._index';
 // ... other necessary imports ...
 
-function DashboardAssistant() {
+function VirtualAssistant() {
 
   return (
     <Box component="main" sx={{ /* styles */ }}>
@@ -20,4 +20,4 @@ function DashboardAssistant() {
   );
 }
 
-export default DashboardAssistant;
+export default VirtualAssistant;

@@ -24,6 +24,8 @@ import { useLoaderData } from "@remix-run/react";
 import { Paper } from '@mui/material';
 import { useLocation } from '@remix-run/react'; // Make sure to import from @remix-run/react
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import DashboardIndex from './dashboard._index';
+import VirtualAssistant from './dashboard.assistant';
 
 // Type for the loader data
 type LoaderData = {
@@ -209,9 +211,11 @@ export default function Dashboard() {
         return <DashboardPSI />;
       case 'Secure Multiparty Computation':
         return <DashboardSMPC />;
+      case 'Virtual Assistant':
+        return <VirtualAssistant />;
       // Add cases for other views
       default:
-        return <div></div>;
+        return <DashboardIndex />; // Render DashboardIndex as the default view
     }
   };
 
