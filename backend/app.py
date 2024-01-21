@@ -656,7 +656,7 @@ def handle_message(data):
     for char in chatbot_reply:  # Iterate through characters instead of words
         print(char)
         emit('response', {'char': char})  # Emit the character
-        sleep(0.1)
+        sleep(0.01)
 
 def extract_reply(full_text, user_message):
     """
