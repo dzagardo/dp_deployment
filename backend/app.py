@@ -44,11 +44,22 @@ socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
 logging.basicConfig(level=logging.INFO)
 
 ### CHATBOT ###
-# Load model and initalize pipeline
-# model = AutoModelForCausalLM.from_pretrained("./path_to_saved_model")
-tokenizer = AutoTokenizer.from_pretrained("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+model_name = "dzagardo/tiny-llama-orca-ghostclip-mixedprecision-dzv1.0.1000"
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+# Load tokenizer (assuming you are using the same tokenizer)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+# Set device to GPU if available
 device = "cuda" if torch.cuda.is_available() else "cpu"
-pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", device=device)
+
+# Initialize pipeline with your model
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, device=device)
+
+# model = AutoModelForCausalLM.from_pretrained("./path_to_saved_model")
+# tokenizer = AutoTokenizer.from_pretrained("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+# pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", device=device)
 
 @app.route('/')
 def home():
@@ -647,32 +658,14 @@ def handle_message(data):
     # Apply chat template
     prompt = pipe.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     # Generate a response using the pipeline
-    outputs = pipe(prompt, max_new_tokens=256, do_sample=True, temperature=0.7, top_k=50, top_p=0.95)
+    outputs = pipe(prompt, max_new_tokens=256, do_sample=False, temperature=0, top_k=50, top_p=0.95)
     full_response = outputs[0]["generated_text"]
     reply_parts = full_response.split("<|assistant|>")
     chatbot_reply = reply_parts[-1].strip() if len(reply_parts) > 1 else full_response.strip()
-    print(chatbot_reply)
     emit('response', {'word': '<NEW_MESSAGE>'})  # Start of a new message
     for char in chatbot_reply:  # Iterate through characters instead of words
-        print(char)
         emit('response', {'char': char})  # Emit the character
         sleep(0.01)
-
-def extract_reply(full_text, user_message):
-    """
-    Extracts the chatbot's reply from the full generated text.
-    This function needs to be tailored based on the structure of the full_text.
-    """
-    # Example logic (this may need to be adjusted based on the actual response format)
-    try:
-        # Find the end of the user message in the response
-        start_index = full_text.find(user_message) + len(user_message)
-        # Extract everything after the user message
-        return full_text[start_index:].strip()
-    except Exception as e:
-        # In case of an error, log it and return the full text or an error message
-        print(f"Error extracting reply: {e}")
-        return full_text  # or return "Error processing response""
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
