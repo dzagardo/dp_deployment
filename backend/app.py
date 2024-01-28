@@ -44,7 +44,7 @@ socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
 logging.basicConfig(level=logging.INFO)
 
 ### CHATBOT ###
-model_name = "dzagardo/tiny-llama-orca-ghostclip-mixedprecision-dzv1.0.1000"
+model_name = "dzagardo/tiny-llama-orca-amp-sgd-dz-v1.0.1000"
 model = AutoModelForCausalLM.from_pretrained(model_name)
 
 # Load tokenizer (assuming you are using the same tokenizer)
@@ -175,7 +175,6 @@ def get_column_names(filename):
         logging.error(f"An error occurred while retrieving column names: {e}")
         return jsonify({"error": str(e)}), 500
 
-    
 @app.route('/get_ratings/<filename>', methods=['GET'])
 def get_ratings(filename):
     file_path = os.path.join('data', filename)
@@ -190,8 +189,6 @@ def get_ratings(filename):
     except Exception as e:
         logging.error(f"An error occurred while retrieving the ratings: {e}")
         return jsonify({"error": str(e)}), 500
-
-
 
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
@@ -271,7 +268,6 @@ def generate_data(algorithm_name, filename):
             raise ValueError(f"Algorithm {algorithm_name} not found in registry")
 
         logging.info(f"Algorithm retrieved: {algorithm_name}")
-
 
         # Make sure the column exists in the data
         if column_name not in original_data.columns:
