@@ -7,6 +7,8 @@ export const loader: LoaderFunction = async ({ request }) => {
     const url = new URL(request.url);
     const code = url.searchParams.get("code");
 
+    console.log("OAuth Callback URL:", url.toString());
+    console.log("Authorization code:", code);
 
     if (!code) {
         console.error("No authorization code found in the request");
@@ -15,8 +17,11 @@ export const loader: LoaderFunction = async ({ request }) => {
 
     try {
         const { accessToken, refreshToken } = await exchangeCodeForTokens(code);
+        console.log("Access Token:", accessToken);
+        console.log("Refresh Token:", refreshToken);
 
         const userInfo = await getUserInfo(accessToken);
+        console.log("User Info:", userInfo);
 
         const user = await getUserByEmail(userInfo.email);
         if (!user) {
@@ -24,7 +29,9 @@ export const loader: LoaderFunction = async ({ request }) => {
             return redirect("/user-not-found");
         }
 
+        console.log("User found in database:", user);
         const userId = user.id;
+        console.log("User ID for token update:", userId);
 
         await updateOauthToken(userId, accessToken, refreshToken);
 
