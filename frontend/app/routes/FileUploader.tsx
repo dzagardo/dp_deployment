@@ -99,7 +99,6 @@ export default function FileUploader({ isUploading }: FileUploaderProps) {
 
         } else {
           // Handle server errors
-          console.log("here");
 
           console.error('Server error during file upload:', response.statusText);
           const errorText = await response.text(); // or response.json() if it returns JSON
@@ -107,7 +106,6 @@ export default function FileUploader({ isUploading }: FileUploaderProps) {
         }
       } catch (error) {
         // Handle network or other errors
-        console.log("here");
         console.error('Network error during file upload:', error);
       }
     } else {

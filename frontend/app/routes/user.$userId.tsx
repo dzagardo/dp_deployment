@@ -5,7 +5,7 @@ import { decryptToken } from "~/models/gcpauth.server";
 import { getUserById, deleteUserByEmail, updateUserRole } from "~/models/user.server";
 import { fetchComputeResources } from "~/models/gcpauth.server";
 import { useUser } from "~/utils";
-import { refreshAccessToken, updateUserToken, fetchMachineTypes, fetchAcceleratorTypes } from "~/models/gcpauth.server";
+import { refreshAccessToken, updateUserToken, fetchAllMachineTypesWithDetails, fetchAcceleratorTypes } from "~/models/gcpauth.server";
 
 export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
@@ -92,14 +92,12 @@ export const loader: LoaderFunction = async ({ params }) => {
         // Decrypt the access token
         let accessToken = await decryptToken(currentUser.encryptedToken);
 
-        console.log(accessToken);
-
         // Define project and zone, ensuring they are not undefined
         let project = process.env.GCP_PROJECT_ID || 'default-project';
         let zone = process.env.GCP_DEFAULT_ZONE || 'us-west1-a';
 
         // Fetch machine types and accelerator types (GPUs)
-        const machineTypes = await fetchMachineTypes(accessToken, project, zone);
+        const machineTypes = await fetchAllMachineTypesWithDetails(accessToken, project, zone);
         const acceleratorTypes = await fetchAcceleratorTypes(accessToken, project, zone);
 
         // Update loaderData with fetched resources
@@ -120,7 +118,6 @@ export const loader: LoaderFunction = async ({ params }) => {
         return json(loaderData, { status: 500 });
     }
 };
-
 
 export default function UserProfile() {
     const currentUser = useUser();
@@ -188,37 +185,33 @@ export default function UserProfile() {
                         </button>
                     </Form>
                 </div>
-                {
-                    computeResources && (
-                        <div className="mt-4">
-                            <h2 className="text-xl font-semibold">Available Compute Resources:</h2>
-                            <ul>
-                                {computeResources.map(resource => (
-                                    <li key={resource.id}>{resource.name} - {resource.machineType}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )
-                }
 
-                {/* List Machine Types */}
+                {/* Machine Types Selection Form */}
                 {loaderData.machineTypes && (
-                    <div>
-                        <h2>Available Machine Types:</h2>
-                        <ul>
-                            {loaderData.machineTypes.map((type) => (
-                                <li key={type.id}>
-                                    {type.name} - Description: {type.description}, Estimated Usage: {type.estimatedUsagePerHour}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                    <Form method="post" action="/path/to/your/backend/function">
+                        <div className="mt-4">
+                            <label htmlFor="machineType" className="block text-sm font-medium text-gray-700">Select Machine Type:</label>
+                            <select id="machineType" name="machineType" required className="mt-1 block w-full border-2 p-2 rounded">
+                                <option value="">Select a machine type</option>
+                                {loaderData.machineTypes.map((type) => (
+                                    <option key={type.id} value={type.name}>
+                                        {type.name} - Description: {type.description}, Estimated Usage: {type.estimatedUsagePerHour}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <button type="submit" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
+                            Run Code
+                        </button>
+                    </Form>
                 )}
 
-                {/* List GPUs (Accelerator Types) */}
+
+                {/* Simplified GPUs Display */}
                 {loaderData.acceleratorTypes && (
                     <div>
                         <h2>Available GPUs:</h2>
+                        {/* Consider using a table or a grid component here for better data presentation */}
                         <ul>
                             {loaderData.acceleratorTypes.map((gpu) => (
                                 <li key={gpu.id}>

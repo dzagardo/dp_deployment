@@ -34,11 +34,12 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
     pe: false,
     psi: false,
     smpc: false,
+    ncml: false,
     va: false,
     // Add more sections as needed
   });
 
-  type SectionKey = 'dp' | 'he' | 'pe' | 'psi' | 'smpc' | 'va'; // Add more keys as needed
+  type SectionKey = 'dp' | 'he' | 'pe' | 'psi' | 'smpc' | 'ncml' | 'va'; // Add more keys as needed
 
   // Update handleClick to also set the current view
   const handleClick = (section: SectionKey, viewName: string) => {
@@ -107,8 +108,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('dp', 'Differential Privacy')}
-        // component={Link}
-        // to="/dashboard/dp"
+      // component={Link}
+      // to="/dashboard/dp"
       >
         <ListItemIcon>
           <DashboardIcon />
@@ -158,8 +159,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('he', 'Homomorphic Encryption')}
-        // component={Link}
-        // to="/dashboard/he"
+      // component={Link}
+      // to="/dashboard/he"
       >
         <ListItemIcon>
           <ShoppingCartIcon />
@@ -197,8 +198,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('pe', 'Polymorphic Encryption')}
-        // component={Link}
-        // to="/dashboard/pe"
+      // component={Link}
+      // to="/dashboard/pe"
       >
         <ListItemIcon>
           <PeopleIcon />
@@ -236,8 +237,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('psi', 'Private Set Intersection')}
-        // component={Link}
-        // to="/dashboard/psi"
+      // component={Link}
+      // to="/dashboard/psi"
       >
         <ListItemIcon>
           <BarChartIcon />
@@ -275,8 +276,8 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
           }
         }}
         onClick={() => handleClick('smpc', 'Secure Multiparty Computation')}
-        // component={Link}
-        // to="/dashboard/smpc"
+      // component={Link}
+      // to="/dashboard/smpc"
       >
         <ListItemIcon>
           <LayersIcon />
@@ -290,6 +291,46 @@ export const MainListItems = ({ onListItemClick }: MainListItemsProps) => {
         <List component="div" disablePadding>
           <ListItemButton sx={listItemButtonStyles('/dashboard/smpc/whatissmpc')} component={Link} to="/dashboard/smpc/whatissmpc">
             <ListItemText primary="What is Secure Multiparty Computation?" />
+          </ListItemButton>
+        </List>
+      </Collapse>
+
+      <ListItemButton
+        sx={{
+          borderRadius: 2, // Adjust for rounded corners
+          my: 1, // Margin top and bottom for spacing between items
+          mx: 1, // Margin left and right for spacing from the drawer edges
+          '.MuiListItemIcon-root': {
+            color: () => getIconColor('/dashboard/ncml'), // Use a function to determine the color based on the route
+          },
+          color: 'white',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.main,
+            '.MuiListItemIcon-root': {
+              color: 'white',
+            },
+            '.MuiListItemText-primary': {
+              color: 'white',
+            },
+          }
+        }}
+        onClick={() => handleClick('ncml', 'No Code Machine Learning')}
+      >
+        <ListItemIcon>
+          <LayersIcon />
+        </ListItemIcon>
+        <ListItemText primary="No Code Machine Learning" />
+        {openSections.smpc ? <ExpandLess /> : <ExpandMore />}
+      </ListItemButton>
+
+      {/* Collapsible Section for No Code ML */}
+      <Collapse in={openSections.ncml} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+        <ListItemButton sx={listItemButtonStyles('/dashboard/ncml/mvp')} component={Link} to="/dashboard/ncml/mvp">
+            <ListItemText primary="Minimum Viable Product" />
+          </ListItemButton>
+          <ListItemButton sx={listItemButtonStyles('/dashboard/ncml/whatisncml')} component={Link} to="/dashboard/ncml/whatisncml">
+            <ListItemText primary="What is No Code Machine Learning?" />
           </ListItemButton>
         </List>
       </Collapse>

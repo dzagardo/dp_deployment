@@ -26,6 +26,7 @@ import { useLocation } from '@remix-run/react'; // Make sure to import from @rem
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIndex from './dashboard._index';
 import VirtualAssistant from './dashboard.assistant';
+import DashboardNCML from './dashboard.ncml';
 
 // Type for the loader data
 type LoaderData = {
@@ -170,17 +171,6 @@ export default function Dashboard() {
   // At the top of your component where you define your other states
   const [listHeight, setListHeight] = useState(0); // Initialize with 0 or any default value
 
-  // Function to determine the initial view based on the current path
-  const getViewFromPath = (path: string) => {
-    if (path.includes('/dashboard/dp')) return 'Differential Privacy';
-    if (path.includes('/dashboard/he')) return 'Homomorphic Encryption';
-    if (path.includes('/dashboard/pe')) return 'Polymorphic Encryption';
-    if (path.includes('/dashboard/psi')) return 'Private Set Intersection';
-    if (path.includes('/dashboard/smpc')) return 'Secure Multiparty Computation';
-    // Add more checks for other paths
-    return 'default'; // Fallback to default view
-  };
-
   useEffect(() => {
     const handleResize = () => {
       // Use a fixed AppBar height
@@ -211,6 +201,8 @@ export default function Dashboard() {
         return <DashboardPSI />;
       case 'Secure Multiparty Computation':
         return <DashboardSMPC />;
+      case 'No Code Machine Learning':
+        return <DashboardNCML />;
       case 'Virtual Assistant':
         return <VirtualAssistant />;
       // Add cases for other views

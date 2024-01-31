@@ -141,7 +141,7 @@ export async function fetchComputeResources(accessToken: string, projectId: stri
     }
 
     // Filter instances to find those with GPUs
-    const gpuResources = data.items.filter((instance: { guestAccelerators: string | any[]; }) => 
+    const gpuResources = data.items.filter((instance: { guestAccelerators: string | any[]; }) =>
         instance.guestAccelerators && instance.guestAccelerators.length > 0
     ).map((instance: { id: any; name: any; machineType: any; guestAccelerators: any[]; }) => {
         // Map to a simplified object structure, if needed
@@ -156,8 +156,7 @@ export async function fetchComputeResources(accessToken: string, projectId: stri
         };
     });
 
-    console.log(gpuResources);
-    return gpuResources; // Return the filtered and mapped resources
+    return gpuResources;
 }
 
 export async function fetchMachineTypes(accessToken: string, projectId: string, zone: string) {
@@ -176,7 +175,6 @@ export async function fetchMachineTypes(accessToken: string, projectId: string, 
     const machineTypes = data.items || [];
 
     // Example of adding additional properties for each machine type
-    // Note: Replace this with actual logic to calculate usage or retrieve pricing
     const enhancedMachineTypes = machineTypes.map((type: { guestCpus: string; memoryMb: string; }) => {
         // Simplified logic to estimate cost based on the type's specifications
         // Assuming $0.02 per hour per CPU and $0.004 per GB of memory as an example
@@ -184,21 +182,84 @@ export async function fetchMachineTypes(accessToken: string, projectId: string, 
         const memoryMb = parseInt(type.memoryMb);
         const memoryGb = memoryMb / 1024;
         const estimatedCostPerHour = (cpus * 0.02) + (memoryGb * 0.004);
-        
+
         return {
             ...type,
             estimatedUsagePerHour: `$${estimatedCostPerHour.toFixed(2)} per hour` // Example format
         };
     });
-    
 
     return enhancedMachineTypes;
 }
 
+// Assuming fetchComputeEngineSkus and formatPricingInfo functions are defined elsewhere
+
+export async function fetchMachineTypesWithPricing(accessToken: string, projectId: string, zone: string) {
+    const machineTypes = await fetchMachineTypes(accessToken, projectId, zone);
+    const computeSkus = await fetchComputeEngineSkus(accessToken); // Fetch all SKUs, not just GPUs
+
+    const enhancedMachineTypes = machineTypes.map((type: { guestCpus: any; memoryMb: any; }) => {
+        // Attempt to match machine type to a SKU for pricing
+        const matchingSku = computeSkus.find((sku: { description: string | string[]; }) => {
+            // Implement a more detailed matching logic here
+            // For example, match based on CPU and memory specifications
+            return sku.description.includes(type.guestCpus) && sku.description.includes(`${type.memoryMb} MB`);
+        });
+
+        const pricePerHour = matchingSku ? formatPricingInfo(matchingSku.pricingInfo) : 'Pricing unavailable';
+
+        return {
+            ...type,
+            estimatedUsagePerHour: pricePerHour,
+        };
+    });
+
+    return enhancedMachineTypes;
+}
+
+export async function fetchAllMachineTypesWithDetails(accessToken: string, projectId: string, zone: string) {
+    const allMachineTypes = await fetchMachineTypes(accessToken, projectId, zone);
+
+    // Filter for g2-standard machines and prepare them for the DataGrid
+    const g2StandardMachinesData = allMachineTypes
+        .map((machine: { id: any; name: any; description: any; guestCpus: any; memoryMb: any; maximumPersistentDisks: any; maximumPersistentDisksSizeGb: any; estimatedUsagePerHour: any; }) => ({
+            id: machine.id, // DataGrid expects a unique id for each row
+            name: machine.name,
+            description: machine.description,
+            guestCpus: machine.guestCpus,
+            memoryMb: machine.memoryMb,
+            maximumPersistentDisks: machine.maximumPersistentDisks,
+            maximumPersistentDisksSizeGb: machine.maximumPersistentDisksSizeGb,
+            estimatedUsagePerHour: machine.estimatedUsagePerHour
+        }));
+
+    return g2StandardMachinesData;
+}
+
+export async function fetchAndProcessG2StandardMachines(accessToken: string, projectId: string, zone: string) {
+    const allMachineTypes = await fetchMachineTypes(accessToken, projectId, zone);
+
+    // Filter for g2-standard machines and prepare them for the DataGrid
+    const g2StandardMachinesData = allMachineTypes
+        .filter((machine: { name: string; }) => machine.name.startsWith('g2-standard'))
+        .map((machine: { id: any; name: any; description: any; guestCpus: any; memoryMb: any; maximumPersistentDisks: any; maximumPersistentDisksSizeGb: any; estimatedUsagePerHour: any; }) => ({
+            id: machine.id, // DataGrid expects a unique id for each row
+            name: machine.name,
+            description: machine.description,
+            guestCpus: machine.guestCpus,
+            memoryMb: machine.memoryMb,
+            maximumPersistentDisks: machine.maximumPersistentDisks,
+            maximumPersistentDisksSizeGb: machine.maximumPersistentDisksSizeGb,
+            estimatedUsagePerHour: machine.estimatedUsagePerHour
+        }));
+
+    return g2StandardMachinesData;
+}
+
 // Helper function to fetch all Compute Engine SKUs from the Cloud Billing API
 async function fetchComputeEngineSkus(accessToken: string): Promise<any[]> {
-    const serviceId = '6F81-5844-456A'; // Ensure this is the correct service ID for Compute Engine
-    const apiKey = process.env.GOOGLE_CLOUD_BILLING_API_KEY; // Ensure your API key is securely stored and accessed
+    const serviceId = '6F81-5844-456A';
+    const apiKey = process.env.GOOGLE_CLOUD_BILLING_API_KEY;
     const url = `https://cloudbilling.googleapis.com/v1/services/${serviceId}/skus?key=${apiKey}`;
 
     const response = await fetch(url, {
@@ -218,18 +279,29 @@ async function fetchComputeEngineSkus(accessToken: string): Promise<any[]> {
     return data.skus;
 }
 
-// Function to enhance GPU types with dynamically fetched pricing information
 async function enhanceGpuTypesWithPricing(accessToken: string, acceleratorTypes: any[], projectId: string, zone: string): Promise<any[]> {
     const computeSkus = await fetchComputeEngineSkus(accessToken);
 
-    // Filter for GPU-related SKUs
-    const gpuSkus = computeSkus.filter(sku => sku.category.resourceFamily === 'GPU');
+    const gpuSkus = computeSkus.filter(sku =>
+        sku.description.toLowerCase().includes('gpu') ||
+        sku.category.resourceGroup.toLowerCase().includes('gpu'));
 
     return Promise.all(acceleratorTypes.map(async gpuType => {
-        const matchingSku = gpuSkus.find(sku => sku.description.includes(gpuType.name));
+        const regex = new RegExp(gpuType.name.replace(/-/g, '.*'), 'i');
+        const matchingSku = gpuSkus.find(sku => regex.test(sku.description));
 
-        // If a matching SKU is found, format and include pricing information
-        const pricePerHour = matchingSku ? formatPricingInfo(matchingSku.pricingInfo) : 'Pricing unavailable';
+        // Handling non-matching SKUs more informatively
+        if (!matchingSku) {
+            console.log(`GPU Type: ${gpuType.name}, Matching SKU: Not Found. Check availability or contact support.`);
+            return {
+                ...gpuType,
+                estimatedUsagePerHour: 'Check availability or contact support for pricing',
+            };
+        }
+
+        // Improving handling when pricing information is available
+        const pricePerHour = matchingSku ? formatPricingInfo(matchingSku.pricingInfo) : 'Pricing details unavailable. Confirm SKU availability.';
+        console.log(`GPU Type: ${gpuType.name}, Price Per Hour: ${pricePerHour}`);
 
         return {
             ...gpuType,
@@ -240,9 +312,24 @@ async function enhanceGpuTypesWithPricing(accessToken: string, acceleratorTypes:
 
 // Utility function to format pricing information
 function formatPricingInfo(pricingInfo: any): string {
+    if (!pricingInfo || pricingInfo.length === 0) return 'Pricing information unavailable';
+
     const pricingExpression = pricingInfo[0].pricingExpression;
+    if (!pricingExpression || pricingExpression.tieredRates.length === 0) return 'Pricing tiers unavailable';
+
     const tieredRate = pricingExpression.tieredRates[0].unitPrice;
-    return `$${tieredRate.amount} ${tieredRate.currencyCode} per hour`;
+
+    // Explicitly converting to numbers to ensure arithmetic addition
+    const units = Number(tieredRate.units);
+    const nanos = Number(tieredRate.nanos) / 1e9;
+
+    // Check if both units and nanos are valid numbers
+    if (isNaN(units) || isNaN(nanos)) return 'Invalid pricing data';
+
+    const pricePerHour = units + nanos;
+    const formattedPrice = `$${pricePerHour.toFixed(2)} ${tieredRate.currencyCode} per hour`;
+
+    return formattedPrice;
 }
 
 // Main function to fetch accelerator types and enhance them with pricing information
@@ -307,7 +394,7 @@ export async function updateUserToken(userId: string, accessToken: string, refre
     try {
         await prisma.user.update({
             where: { id: userId },
-            data: { 
+            data: {
                 encryptedToken: encryptedAccessToken,
                 encryptedRefreshToken: encryptedRefreshToken,
             },
