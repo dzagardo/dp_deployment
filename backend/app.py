@@ -44,7 +44,7 @@ socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
 logging.basicConfig(level=logging.INFO)
 
 ### CHATBOT ###
-model_name = "dzagardo/tiny-llama-orca-amp-sgd-dz-v1.0.1000"
+model_name = "dzagardo/tiny-llama-orca-amp-gclip-dp-pa-sgd-dz-v1.1.1000"
 model = AutoModelForCausalLM.from_pretrained(model_name)
 
 # Load tokenizer (assuming you are using the same tokenizer)
@@ -654,7 +654,7 @@ def handle_message(data):
     # Apply chat template
     prompt = pipe.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     # Generate a response using the pipeline
-    outputs = pipe(prompt, max_new_tokens=256, do_sample=False, temperature=0, top_k=50, top_p=0.95)
+    outputs = pipe(prompt, max_new_tokens=256, do_sample=True, temperature=0.7, top_k=50, top_p=0.95)
     full_response = outputs[0]["generated_text"]
     reply_parts = full_response.split("<|assistant|>")
     chatbot_reply = reply_parts[-1].strip() if len(reply_parts) > 1 else full_response.strip()

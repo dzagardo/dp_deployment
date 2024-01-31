@@ -24,9 +24,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
-    console.log("Params:", params); // Log the params to see if userId is present
     const formData = await request.formData();
-    console.log("Form Data:", Object.fromEntries(formData));
     const actionType = formData.get("_action");
 
     if (actionType === "delete") {
@@ -54,6 +52,12 @@ export const action: ActionFunction = async ({ request, params }) => {
 export default function UserProfile() {
     const { user } = useLoaderData<LoaderData>();
     const currentUser = useUser();
+
+    // Function to handle GCP link button click
+    const handleLinkGCPAccount = async () => {
+        // Redirect to a route that starts the OAuth flow
+        window.location.href = `/user/linkgcp/${user.id}`;
+    };
 
     return (
         <div className="flex h-full min-h-screen flex-col">
@@ -112,6 +116,16 @@ export default function UserProfile() {
                             Delete Account
                         </button>
                     </Form>
+                </div>
+
+                {/* Button to Link GCP Account */}
+                <div className="mt-4">
+                    <button
+                        onClick={handleLinkGCPAccount}
+                        className="bg-green-500 text-white px-4 py-2 rounded"
+                    >
+                        Link GCP Account
+                    </button>
                 </div>
             </main>
         </div>

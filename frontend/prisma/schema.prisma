@@ -16,6 +16,7 @@ model User {
   notes        Note[]
   role         String?
   userDatasets UserDataset[] // New relation to UserDataset
+  encryptedToken String?       // New field to store the encrypted OAuth token
 }
 
 model Password {

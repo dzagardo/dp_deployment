@@ -2,6 +2,7 @@ import type { Password, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "~/db.server";
+import { encryptToken } from "./gcpauth.server";
 
 export type { User } from "@prisma/client";
 
@@ -72,4 +73,22 @@ export async function verifyLogin(
   const { password: _password, ...userWithoutPassword } = userWithPassword;
 
   return userWithoutPassword;
+}
+
+export async function updateOauthToken(userId: string, accessToken: string, refreshToken: string) {
+  // Concatenate both tokens with a delimiter (e.g., "::")
+  const combinedToken = accessToken + "::" + refreshToken;
+  const encryptedToken = encryptToken(combinedToken);
+  
+  try {
+      await prisma.user.update({
+          where: { id: userId },
+          data: {
+            encryptedToken: encryptedToken,
+          },
+      });
+  } catch (error) {
+      console.error("Error updating OAuth token: ", error);
+      throw new Error("Unable to update OAuth token");
+  }
 }
