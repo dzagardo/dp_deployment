@@ -128,11 +128,143 @@ export async function fetchComputeResources(accessToken: string, projectId: stri
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to fetch compute resources: ${response.status} ${response.statusText}`);
+        const errorDetails = await response.json(); // Assuming the error details are in JSON format
+        console.error("Failed to fetch compute resources:", errorDetails);
+        throw new Error(`Failed to fetch compute resources: ${response.status} ${response.statusText} - ${errorDetails.message}`);
     }
 
     const data = await response.json();
-    return data.items; // Adjust according to the actual response structure
+    // Check for the 'items' field in the response
+    if (!data.items) {
+        console.log('No compute instances found.');
+        return []; // Return an empty array if no instances are found
+    }
+
+    // Filter instances to find those with GPUs
+    const gpuResources = data.items.filter((instance: { guestAccelerators: string | any[]; }) => 
+        instance.guestAccelerators && instance.guestAccelerators.length > 0
+    ).map((instance: { id: any; name: any; machineType: any; guestAccelerators: any[]; }) => {
+        // Map to a simplified object structure, if needed
+        return {
+            id: instance.id,
+            name: instance.name,
+            machineType: instance.machineType,
+            gpus: instance.guestAccelerators.map((gpu: { acceleratorType: any; acceleratorCount: any; }) => ({
+                type: gpu.acceleratorType,
+                count: gpu.acceleratorCount
+            }))
+        };
+    });
+
+    console.log(gpuResources);
+    return gpuResources; // Return the filtered and mapped resources
+}
+
+export async function fetchMachineTypes(accessToken: string, projectId: string, zone: string) {
+    const url = `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zone}/machineTypes`;
+    const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+        const errorDetails = await response.json();
+        console.error("Failed to fetch machine types:", errorDetails);
+        throw new Error(`Failed to fetch machine types: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const machineTypes = data.items || [];
+
+    // Example of adding additional properties for each machine type
+    // Note: Replace this with actual logic to calculate usage or retrieve pricing
+    const enhancedMachineTypes = machineTypes.map((type: { guestCpus: string; memoryMb: string; }) => {
+        // Simplified logic to estimate cost based on the type's specifications
+        // Assuming $0.02 per hour per CPU and $0.004 per GB of memory as an example
+        const cpus = parseInt(type.guestCpus);
+        const memoryMb = parseInt(type.memoryMb);
+        const memoryGb = memoryMb / 1024;
+        const estimatedCostPerHour = (cpus * 0.02) + (memoryGb * 0.004);
+        
+        return {
+            ...type,
+            estimatedUsagePerHour: `$${estimatedCostPerHour.toFixed(2)} per hour` // Example format
+        };
+    });
+    
+
+    return enhancedMachineTypes;
+}
+
+// Helper function to fetch all Compute Engine SKUs from the Cloud Billing API
+async function fetchComputeEngineSkus(accessToken: string): Promise<any[]> {
+    const serviceId = '6F81-5844-456A'; // Ensure this is the correct service ID for Compute Engine
+    const apiKey = process.env.GOOGLE_CLOUD_BILLING_API_KEY; // Ensure your API key is securely stored and accessed
+    const url = `https://cloudbilling.googleapis.com/v1/services/${serviceId}/skus?key=${apiKey}`;
+
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const errorDetails = await response.json();
+        console.error("Failed to fetch SKUs:", errorDetails);
+        throw new Error(`Failed to fetch SKUs: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.skus;
+}
+
+// Function to enhance GPU types with dynamically fetched pricing information
+async function enhanceGpuTypesWithPricing(accessToken: string, acceleratorTypes: any[], projectId: string, zone: string): Promise<any[]> {
+    const computeSkus = await fetchComputeEngineSkus(accessToken);
+
+    // Filter for GPU-related SKUs
+    const gpuSkus = computeSkus.filter(sku => sku.category.resourceFamily === 'GPU');
+
+    return Promise.all(acceleratorTypes.map(async gpuType => {
+        const matchingSku = gpuSkus.find(sku => sku.description.includes(gpuType.name));
+
+        // If a matching SKU is found, format and include pricing information
+        const pricePerHour = matchingSku ? formatPricingInfo(matchingSku.pricingInfo) : 'Pricing unavailable';
+
+        return {
+            ...gpuType,
+            estimatedUsagePerHour: pricePerHour,
+        };
+    }));
+}
+
+// Utility function to format pricing information
+function formatPricingInfo(pricingInfo: any): string {
+    const pricingExpression = pricingInfo[0].pricingExpression;
+    const tieredRate = pricingExpression.tieredRates[0].unitPrice;
+    return `$${tieredRate.amount} ${tieredRate.currencyCode} per hour`;
+}
+
+// Main function to fetch accelerator types and enhance them with pricing information
+export async function fetchAcceleratorTypes(accessToken: string, projectId: string, zone: string): Promise<any[]> {
+    const url = `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zone}/acceleratorTypes`;
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorDetails = await response.json();
+        console.error("Failed to fetch accelerator types:", errorDetails);
+        throw new Error(`Failed to fetch accelerator types: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const acceleratorTypes = data.items || [];
+
+    // Enhance accelerator types with dynamic pricing information
+    return enhanceGpuTypesWithPricing(accessToken, acceleratorTypes, projectId, zone);
 }
 
 export async function refreshAccessToken(refreshToken: string): Promise<string> {
@@ -168,18 +300,22 @@ export async function refreshAccessToken(refreshToken: string): Promise<string> 
     return data.access_token;
 }
 
-export async function updateUserToken(userId: string, accessToken: string): Promise<void> {
+export async function updateUserToken(userId: string, accessToken: string, refreshToken: string): Promise<void> {
     const encryptedAccessToken = encryptToken(accessToken);
+    const encryptedRefreshToken = encryptToken(refreshToken);
 
     try {
         await prisma.user.update({
             where: { id: userId },
-            data: { encryptedToken: encryptedAccessToken },
+            data: { 
+                encryptedToken: encryptedAccessToken,
+                encryptedRefreshToken: encryptedRefreshToken,
+            },
         });
-        console.log("Access token updated successfully.");
+        console.log("Tokens updated successfully.");
     } catch (error) {
-        console.error("Failed to update access token:", error);
-        throw new Error("Failed to update access token");
+        console.error("Failed to update tokens:", error);
+        throw new Error("Failed to update tokens");
     }
 }
 

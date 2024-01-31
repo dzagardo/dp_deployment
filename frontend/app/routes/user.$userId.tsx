@@ -5,7 +5,7 @@ import { decryptToken } from "~/models/gcpauth.server";
 import { getUserById, deleteUserByEmail, updateUserRole } from "~/models/user.server";
 import { fetchComputeResources } from "~/models/gcpauth.server";
 import { useUser } from "~/utils";
-import { refreshAccessToken, updateUserToken } from "~/models/gcpauth.server";
+import { refreshAccessToken, updateUserToken, fetchMachineTypes, fetchAcceleratorTypes } from "~/models/gcpauth.server";
 
 export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
@@ -37,6 +37,20 @@ type ComputeResource = {
     machineType: string;
 };
 
+type MachineType = {
+    id: string;
+    name: string;
+    description?: string;
+    estimatedUsagePerHour?: string;
+};
+
+type AcceleratorType = {
+    id: string;
+    name: string;
+    description?: string;
+    estimatedUsagePerHour?: string;
+};
+
 type LoaderData = {
     isAuthenticated: boolean;
     user?: {
@@ -46,18 +60,18 @@ type LoaderData = {
         encryptedToken: string | null;
     };
     computeResources?: ComputeResource[];
+    machineTypes?: MachineType[];
+    acceleratorTypes?: AcceleratorType[];
     errorMessage?: string;
 };
 
 export const loader: LoaderFunction = async ({ params }) => {
-
     let loaderData: LoaderData = {
         isAuthenticated: false,
     };
 
     try {
         const userId = params.userId;
-        
         if (!userId) {
             loaderData.errorMessage = "User ID is not provided.";
             return json(loaderData);
@@ -75,30 +89,29 @@ export const loader: LoaderFunction = async ({ params }) => {
             return json(loaderData);
         }
 
+        // Decrypt the access token
         let accessToken = await decryptToken(currentUser.encryptedToken);
-        let computeResources = null;
 
-        try {
-            computeResources = await fetchComputeResources(accessToken, "projectID", "zone");
-        } catch (error) {
-            if (error instanceof Error && error.message.includes("401")) {
-                loaderData.errorMessage = "Access token expired. User needs to re-authenticate.";
-                return json(loaderData);
-            } else {
-                loaderData.errorMessage = "An unexpected error occurred.";
-                return json(loaderData);
-            }
-        }
+        console.log(accessToken);
 
+        // Define project and zone, ensuring they are not undefined
+        let project = process.env.GCP_PROJECT_ID || 'default-project';
+        let zone = process.env.GCP_DEFAULT_ZONE || 'us-west1-a';
+
+        // Fetch machine types and accelerator types (GPUs)
+        const machineTypes = await fetchMachineTypes(accessToken, project, zone);
+        const acceleratorTypes = await fetchAcceleratorTypes(accessToken, project, zone);
+
+        // Update loaderData with fetched resources
         loaderData.isAuthenticated = true;
-        // Provide a default value for role if it's null
         loaderData.user = {
             id: currentUser.id,
             email: currentUser.email,
             role: currentUser.role || 'No role assigned',
-            encryptedToken: currentUser.encryptedToken
+            encryptedToken: currentUser.encryptedToken,
         };
-        loaderData.computeResources = computeResources;
+        loaderData.machineTypes = machineTypes;
+        loaderData.acceleratorTypes = acceleratorTypes;
 
         return json(loaderData);
     } catch (error) {
@@ -108,15 +121,12 @@ export const loader: LoaderFunction = async ({ params }) => {
     }
 };
 
-// Function to handle GCP link button click
 
 export default function UserProfile() {
     const currentUser = useUser();
     const loaderData = useLoaderData<LoaderData>();
 
     const { computeResources } = loaderData;
-
-    console.log(currentUser);
 
     // Check if user is defined before accessing its properties
     if (!currentUser) {
@@ -128,23 +138,6 @@ export default function UserProfile() {
         // Ensure that you're using the correct URL and handling for initiating the OAuth flow
         window.location.href = `/user/linkgcp/${currentUser.id}`;
     };
-
-    // Check if loader data is loaded properly and authentication status
-    // if (!loaderData || loaderData.errorMessage) {
-    //     // Handle error or re-authentication scenario
-    //     return (
-    //         <div>
-    //             <p>{loaderData.errorMessage || "Error loading user profile."}</p>
-    //             {/* Provide a button for re-authentication */}
-    //             <button
-    //                 onClick={handleLinkGCPAccount}
-    //                 className="bg-green-500 text-white px-4 py-2 rounded"
-    //             >
-    //                 Re-authenticate with GCP
-    //             </button>
-    //         </div>
-    //     );
-    // }
 
     return (
         <div className="flex h-full min-h-screen flex-col">
@@ -207,6 +200,35 @@ export default function UserProfile() {
                         </div>
                     )
                 }
+
+                {/* List Machine Types */}
+                {loaderData.machineTypes && (
+                    <div>
+                        <h2>Available Machine Types:</h2>
+                        <ul>
+                            {loaderData.machineTypes.map((type) => (
+                                <li key={type.id}>
+                                    {type.name} - Description: {type.description}, Estimated Usage: {type.estimatedUsagePerHour}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* List GPUs (Accelerator Types) */}
+                {loaderData.acceleratorTypes && (
+                    <div>
+                        <h2>Available GPUs:</h2>
+                        <ul>
+                            {loaderData.acceleratorTypes.map((gpu) => (
+                                <li key={gpu.id}>
+                                    {gpu.name} - Description: {gpu.description}, Estimated Usage: {gpu.estimatedUsagePerHour}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {/* Delete Account Form */}
                 <div className="mt-4">
                     <Form method="post" className="bg-white p-4 rounded shadow">

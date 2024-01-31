@@ -1,6 +1,6 @@
 import { LoaderFunction, redirect } from "@remix-run/node";
-import { exchangeCodeForTokens, getUserInfo } from "~/models/gcpauth.server";
-import { getUserByEmail, updateOauthToken } from "~/models/user.server";
+import { exchangeCodeForTokens, getUserInfo, updateUserToken } from "~/models/gcpauth.server";
+import { getUserByEmail } from "~/models/user.server";
 import { createUserSession } from "~/session.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -33,7 +33,7 @@ export const loader: LoaderFunction = async ({ request }) => {
         const userId = user.id;
         console.log("User ID for token update:", userId);
 
-        await updateOauthToken(userId, accessToken, refreshToken);
+        await updateUserToken(userId, accessToken, refreshToken);
 
         // Redirect user to the home page after successful login and token update
         return createUserSession({
