@@ -12,6 +12,9 @@ import {
   FormControl,
   InputLabel,
   SelectChangeEvent,
+  Paper,
+  Grid,
+  Box,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search'; // Import the search icon
 
@@ -31,7 +34,6 @@ type AcceleratorType = {
 
 function NCMLView() {
   const currentUser = useUser();
-  const [searchQuery, setSearchQuery] = useState("");
   const [machineTypes, setMachineTypes] = useState<MachineType[]>([]);
   const [selectedMachineType, setSelectedMachineType] = useState('');
   const [selectedOptimizer, setSelectedOptimizer] = useState('adam'); // New state for optimizer
@@ -43,6 +45,12 @@ function NCMLView() {
   const [models, setModels] = useState<{ name: string; description: string }[]>([]);
   const [modelSource, setModelSource] = useState('yourModels'); // Initialize with 'yourModels'
   const [huggingFaceModelQuery, setHuggingFaceModelQuery] = useState(''); // State to track the Hugging Face model search query
+  const [learningRate, setLearningRate] = useState(0.001); // Default learning rate
+  const [batchSize, setBatchSize] = useState(10); // Default learning rate
+  const [microBatchSize, setMicroBatchSize] = useState(1); // Default learning rate
+  const [sampleSize, setSampleSize] = useState(1000); // Default learning rate
+  const [gradAccum, setGradAccum] = useState(10); // Default learning rate
+  const [numEpochs, setNumEpochs] = useState(10); // Default learning rate
 
   useEffect(() => {
     // Define the function inside the useEffect
@@ -270,211 +278,307 @@ function NCMLView() {
     setHuggingFaceModelQuery(event.target.value);
   };
 
+  const consistentMarginStyle = { margin: 'normal', mt: 2, mb: 2 }; // Define consistent margin
+
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
         LLM Fine-Tuning Dashboard
       </Typography>
-      <form onSubmit={handleRunCode}>
-        {/* Model Source Selection */}
-        <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-          <InputLabel id="model-source-label">Model Source</InputLabel>
-          <Select
-            labelId="model-source-label"
-            id="modelSource"
-            name="modelSource"
-            value={modelSource}
-            onChange={handleModelSourceChange}
-            label="Model Source"
-          >
-            <MenuItem value="yourModels">Your Models</MenuItem>
-            <MenuItem value="huggingFace">Hugging Face Models</MenuItem>
-          </Select>
-        </FormControl>
 
-        {modelSource === 'yourModels' && (
-          // Render a component or list representing your models
-          <Typography>Your models go here...</Typography>
-        )}
-        {modelSource === 'huggingFace' && (
-          <div>
-            <TextField
-              label="Search Hugging Face Models"
-              type="text"
-              id="huggingFaceModelQuery"
-              name="huggingFaceModelQuery"
-              value={huggingFaceModelQuery}
-              onChange={handleHuggingFaceModelQueryChange}
-              fullWidth
-              margin="normal"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="Search"
-                      onClick={handleHuggingFaceModelSearch}
-                      edge="end"
-                      color="primary"
-                    >
-                      <SearchIcon /> {/* Display the search icon */}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
 
-            {/* Display search results here */}
-            <div>
-              {models.length > 0 ? (
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel htmlFor="huggingFaceModel-select">Select Hugging Face Model</InputLabel>
-                  <Select
-                    labelId="huggingFaceModel-select"
-                    id="huggingFaceModel-select"
-                    value={selectedModel}
-                    onChange={handleModelSelect}
-                  >
-                    {models.map((model, index) => (
-                      <MenuItem key={`${model.name}_${index}`} value={model.name}>
-                        {model.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              ) : (
-                <Typography variant="body2">No results found</Typography>
-              )}
-            </div>
-          </div>
-        )}
+      <Box sx={{ marginBottom: 2 }}>
+        <Paper elevation={3} sx={{ padding: 3 }}> {/* Add Paper component with elevation and padding */}
+          <Typography variant="h5" gutterBottom>
+            Choose Your Model
+          </Typography>
+          <form onSubmit={handleRunCode}>
+            {/* Model Source Selection */}
+            <FormControl fullWidth sx={consistentMarginStyle}>
+              <InputLabel id="model-source-label">Model Source</InputLabel>
+              <Select
+                labelId="model-source-label"
+                id="modelSource"
+                name="modelSource"
+                value={modelSource}
+                onChange={handleModelSourceChange}
+                label="Model Source"
+              >
+                <MenuItem value="yourModels">Your Models</MenuItem>
+                <MenuItem value="huggingFace">Hugging Face Models</MenuItem>
+              </Select>
+            </FormControl>
 
-        {/* Dataset Source Selection */}
-        <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-          <InputLabel id="dataset-source-label">Dataset Source</InputLabel>
-          <Select
-            labelId="dataset-source-label"
-            id="datasetSource"
-            name="datasetSource"
-            value={datasetSource}
-            onChange={handleDatasetSourceChange}
-            label="Dataset Source"
-          >
-            <MenuItem value="yourDatasets">Your Datasets</MenuItem>
-            <MenuItem value="huggingFace">Hugging Face Datasets</MenuItem>
-          </Select>
-        </FormControl>
+            {modelSource === 'yourModels' && (
+              <Typography></Typography>
+            )}
+            {modelSource === 'huggingFace' && (
+              <div>
+                <TextField
+                  label="Search Hugging Face Models"
+                  type="text"
+                  id="huggingFaceModelQuery"
+                  name="huggingFaceModelQuery"
+                  value={huggingFaceModelQuery}
+                  onChange={handleHuggingFaceModelQueryChange}
+                  fullWidth
+                  sx={consistentMarginStyle}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="Search"
+                          onClick={handleHuggingFaceModelSearch}
+                          edge="end"
+                          color="primary"
+                        >
+                          <SearchIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
-        {/* Conditional Rendering based on Dataset Source */}
-        {datasetSource === 'yourDatasets' && (
-          // Render a component or list representing the user's datasets
-          <Typography>Your datasets go here...</Typography>
-        )}
-        {datasetSource === 'huggingFace' && (
-          <div>
-            <TextField
-              label="Search Hugging Face Datasets"
-              type="text"
-              id="huggingFaceQuery"
-              name="huggingFaceQuery"
-              value={huggingFaceDatasetQuery}
-              onChange={handleHuggingFaceDatasetQueryChange}
-              fullWidth
-              margin="normal"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="Search"
-                      onClick={handleHuggingFaceDatasetSearch}
-                      edge="end"
-                      color="primary"
-                    >
-                      <SearchIcon /> {/* Display the search icon */}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+                {/* Display search results here */}
+                <div>
+                  {models.length > 0 ? (
+                    <FormControl fullWidth sx={consistentMarginStyle}>
+                      <InputLabel htmlFor="huggingFaceModel-select">Select Hugging Face Model</InputLabel>
+                      <Select
+                        labelId="huggingFaceModel-select"
+                        id="huggingFaceModel-select"
+                        value={selectedModel}
+                        onChange={handleModelSelect}
+                      >
+                        {models.map((model, index) => (
+                          <MenuItem key={`${model.name}_${index}`} value={model.name}>
+                            {model.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Typography></Typography>
+                  )}
+                </div>
+              </div>
+            )}
+          </form>
+        </Paper>
+      </Box>
 
-            {/* Display search results here */}
-            <div>
-              {datasets.length > 0 ? (
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel htmlFor="dataset-select">Select Dataset</InputLabel>
-                  <Select
-                    labelId="dataset-select"
-                    id="dataset-select"
-                    value={selectedDataset}
-                    onChange={handleDatasetSelect}
-                  >
-                    {datasets.map((dataset, index) => (
-                      <MenuItem key={`${dataset.name}_${index}`} value={dataset.name}>
-                        {dataset.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              ) : (
-                <Typography variant="body2">No results found</Typography>
-              )}
-            </div>
-          </div>
-        )}
 
-        {/* Optimizer selection */}
-        <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-          <InputLabel id="optimizer-label">Optimizer</InputLabel>
-          <Select
-            labelId="optimizer-label"
-            id="optimizer"
-            name="optimizer"
-            value={selectedOptimizer}
-            onChange={handleOptimizerChange}
-            label="Optimizer"
-          >
-            <MenuItem value="adam">Adam</MenuItem>
-            <MenuItem value="sgd">SGD</MenuItem>
-            {/* Add more optimizers */}
-          </Select>
-        </FormControl>
 
-        {/* Number of epochs */}
-        <TextField
-          label="Epochs"
-          type="number"
-          id="epochs"
-          name="epochs"
-          fullWidth
-          margin="normal"
-          sx={{ mb: 2 }}
-        />
-
-        {/* Machine Types Selection */}
-        {machineTypes.length > 0 && (
-          <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-            <InputLabel id="machineType-label">Machine Type</InputLabel>
+      <Box sx={{ marginBottom: 2 }}>
+        <Paper elevation={3} sx={{ padding: 3 }}> {/* Add Paper component with elevation and padding */}
+          <Typography variant="h5" gutterBottom>
+            Choose Your Dataset
+          </Typography>
+          {/* Dataset Source Selection */}
+          <FormControl fullWidth sx={consistentMarginStyle}>
+            <InputLabel id="dataset-source-label">Dataset Source</InputLabel>
             <Select
-              labelId="machineType-label"
-              id="machineType"
-              name="machineType"
-              value={selectedMachineType}
-              onChange={handleMachineTypeChange}
-              label="Machine Type"
+              labelId="dataset-source-label"
+              id="datasetSource"
+              name="datasetSource"
+              value={datasetSource}
+              onChange={handleDatasetSourceChange}
+              label="Dataset Source"
             >
-              {machineTypes.map((type) => (
-                <MenuItem key={type.id} value={type.name}>
-                  {`${type.name} - Description: ${type.description}, Estimated Usage: ${type.estimatedUsagePerHour}`}
-                </MenuItem>
-              ))}
+              <MenuItem value="yourDatasets">Your Datasets</MenuItem>
+              <MenuItem value="huggingFace">Hugging Face Datasets</MenuItem>
             </Select>
           </FormControl>
-        )}
 
-        <Button type="submit" variant="contained" color="primary">
-          Run Code
-        </Button>
-      </form>
-    </Container>
+          {/* Conditional Rendering based on Dataset Source */}
+          {datasetSource === 'yourDatasets' && (
+            <Typography></Typography>
+          )}
+          {datasetSource === 'huggingFace' && (
+            <div>
+              <TextField
+                label="Search Hugging Face Datasets"
+                type="text"
+                id="huggingFaceQuery"
+                name="huggingFaceQuery"
+                value={huggingFaceDatasetQuery}
+                onChange={handleHuggingFaceDatasetQueryChange}
+                fullWidth
+                sx={consistentMarginStyle} // Ensure this is applied here as it is for the model TextField
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="Search"
+                        onClick={handleHuggingFaceDatasetSearch}
+                        edge="end"
+                        color="primary"
+                      >
+                        <SearchIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              {/* Display search results here */}
+              <div>
+                {datasets.length > 0 ? (
+                  <FormControl fullWidth sx={consistentMarginStyle}>
+                    <InputLabel htmlFor="dataset-select">Select Dataset</InputLabel>
+                    <Select
+                      labelId="dataset-select"
+                      id="dataset-select"
+                      value={selectedDataset}
+                      onChange={handleDatasetSelect}
+                    >
+                      {datasets.map((dataset, index) => (
+                        <MenuItem key={`${dataset.name}_${index}`} value={dataset.name}>
+                          {dataset.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                ) : (
+                  <Typography></Typography>
+                )}
+              </div>
+            </div>
+          )}
+        </Paper>
+      </Box>
+
+
+
+      <Box sx={{ marginBottom: 2 }}>
+        <Paper elevation={3} sx={{ padding: 3 }}> {/* Add Paper component with elevation and padding */}
+          <Typography variant="h5" gutterBottom>
+            Choose Your Hyperparameters
+          </Typography>
+          {/* Optimizer selection */}
+          <FormControl fullWidth sx={consistentMarginStyle}>
+            <InputLabel id="optimizer-label">Optimizer</InputLabel>
+            <Select
+              labelId="optimizer-label"
+              id="optimizer"
+              name="optimizer"
+              value={selectedOptimizer}
+              onChange={handleOptimizerChange}
+              label="Optimizer"
+            >
+              <MenuItem value="adam">Adam</MenuItem>
+              <MenuItem value="sgd">SGD</MenuItem>
+              {/* Add more optimizers */}
+            </Select>
+          </FormControl>
+
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+              <TextField
+                label="Epochs"
+                type="number"
+                id="numEpochs"
+                name="numEpochs"
+                value={numEpochs}
+                onChange={(e) => setNumEpochs(Number(e.target.value))}
+                fullWidth
+                sx={consistentMarginStyle}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+              <TextField
+                label="Learning Rate"
+                type="number"
+                id="learningRate"
+                name="learningRate"
+                value={learningRate}
+                onChange={(e) => setLearningRate(Number(e.target.value))}
+                fullWidth
+                sx={consistentMarginStyle}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+              <TextField
+                label="Batch Size"
+                type="number"
+                id="batchSize"
+                name="batchSize"
+                value={batchSize}
+                onChange={(e) => setBatchSize(Number(e.target.value))}
+                fullWidth
+                sx={consistentMarginStyle}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+              <TextField
+                label="Microbatch Size"
+                type="number"
+                id="microBatch"
+                name="microBatch"
+                value={microBatchSize}
+                onChange={(e) => setMicroBatchSize(Number(e.target.value))}
+                fullWidth
+                sx={consistentMarginStyle}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+              <TextField
+                label="Gradient Accumulation"
+                type="number"
+                id="gradAccum"
+                name="gradAccum"
+                value={gradAccum}
+                onChange={(e) => setGradAccum(Number(e.target.value))}
+                fullWidth
+                sx={consistentMarginStyle}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+              <TextField
+                label="Sample Size"
+                type="number"
+                id="sampleSize"
+                name="sampleSize"
+                value={sampleSize}
+                onChange={(e) => setSampleSize(Number(e.target.value))}
+                fullWidth
+                sx={consistentMarginStyle}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Machine Types Selection */}
+          {machineTypes.length > 0 && (
+            <FormControl fullWidth sx={consistentMarginStyle}>
+              <InputLabel id="machineType-label">Machine Type</InputLabel>
+              <Select
+                labelId="machineType-label"
+                id="machineType"
+                name="machineType"
+                value={selectedMachineType}
+                onChange={handleMachineTypeChange}
+                label="Machine Type"
+              >
+                {machineTypes.map((type) => (
+                  <MenuItem key={type.id} value={type.name}>
+                    {`${type.name} - Description: ${type.description}, Estimated Usage: ${type.estimatedUsagePerHour}`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
+          <Button type="submit" variant="contained" color="primary">
+            Train Model
+          </Button>
+        </Paper>
+      </Box>
+    </Container >
   );
 }
 
