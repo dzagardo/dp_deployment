@@ -92,3 +92,19 @@ export async function updateOauthToken(userId: string, accessToken: string, refr
       throw new Error("Unable to update OAuth token");
   }
 }
+
+export async function updateHuggingFaceToken(userId: string, huggingFaceToken: string): Promise<void> {
+  const encryptedHFAccessToken = encryptToken(huggingFaceToken);
+  try {
+      await prisma.user.update({
+          where: { id: userId },
+          data: {
+              encryptedHFAccessToken: encryptedHFAccessToken,
+          },
+      });
+      console.log("Hugging Face token updated successfully.");
+  } catch (error) {
+      console.error("Failed to update Hugging Face token:", error);
+      throw new Error("Failed to update Hugging Face token");
+  }
+}

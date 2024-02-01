@@ -292,7 +292,6 @@ async function enhanceGpuTypesWithPricing(accessToken: string, acceleratorTypes:
 
         // Handling non-matching SKUs more informatively
         if (!matchingSku) {
-            console.log(`GPU Type: ${gpuType.name}, Matching SKU: Not Found. Check availability or contact support.`);
             return {
                 ...gpuType,
                 estimatedUsagePerHour: 'Check availability or contact support for pricing',
@@ -301,7 +300,6 @@ async function enhanceGpuTypesWithPricing(accessToken: string, acceleratorTypes:
 
         // Improving handling when pricing information is available
         const pricePerHour = matchingSku ? formatPricingInfo(matchingSku.pricingInfo) : 'Pricing details unavailable. Confirm SKU availability.';
-        console.log(`GPU Type: ${gpuType.name}, Price Per Hour: ${pricePerHour}`);
 
         return {
             ...gpuType,
@@ -419,5 +417,23 @@ export async function saveUserTokens(userId: string, accessToken: string, refres
     } catch (error) {
         console.error("Failed to update tokens:", error);
         throw new Error("Failed to update tokens");
+    }
+}
+
+export async function getDecryptedHuggingFaceToken(userId: string): Promise<string> {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { encryptedHFAccessToken: true },
+        });
+
+        if (!user || !user.encryptedHFAccessToken) {
+            throw new Error("User or encrypted Hugging Face token not found");
+        }
+
+        return decryptToken(user.encryptedHFAccessToken);
+    } catch (error) {
+        console.error("Error retrieving or decrypting Hugging Face token: ", error);
+        throw new Error("Unable to retrieve or decrypt Hugging Face token");
     }
 }

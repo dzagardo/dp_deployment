@@ -6,6 +6,7 @@ import { getUserById, deleteUserByEmail, updateUserRole } from "~/models/user.se
 import { fetchComputeResources } from "~/models/gcpauth.server";
 import { useUser } from "~/utils";
 import { refreshAccessToken, updateUserToken, fetchAllMachineTypesWithDetails, fetchAcceleratorTypes } from "~/models/gcpauth.server";
+import { updateHuggingFaceToken } from "~/models/user.server";
 
 export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
@@ -26,6 +27,17 @@ export const action: ActionFunction = async ({ request, params }) => {
         if (!userId || typeof newRole !== 'string') throw new Error("Missing parameters for role update.");
 
         await updateUserRole(userId, newRole); // Ensure this function exists in your user.server.ts
+
+        return redirect(`/user/${userId}`); // Redirect back to the user profile
+    }
+
+    // Inside your action function
+    if (actionType === "saveHuggingFaceToken") {
+        const huggingFaceToken = formData.get("huggingFaceToken");
+        const userId = params.userId;
+        if (!userId || typeof huggingFaceToken !== 'string') throw new Error("Missing parameters for Hugging Face token update.");
+
+        await updateHuggingFaceToken(userId, huggingFaceToken);
 
         return redirect(`/user/${userId}`); // Redirect back to the user profile
     }
@@ -63,11 +75,13 @@ type LoaderData = {
     machineTypes?: MachineType[];
     acceleratorTypes?: AcceleratorType[];
     errorMessage?: string;
+    hasHuggingFaceToken: boolean;
 };
 
 export const loader: LoaderFunction = async ({ params }) => {
     let loaderData: LoaderData = {
         isAuthenticated: false,
+        hasHuggingFaceToken: false
     };
 
     try {
@@ -89,11 +103,15 @@ export const loader: LoaderFunction = async ({ params }) => {
             return json(loaderData);
         }
 
+        // Inside your loader function, after fetching the user:
+        const hasHuggingFaceToken = Boolean(currentUser.encryptedHFAccessToken);
+        loaderData.hasHuggingFaceToken = hasHuggingFaceToken;
+
         // Decrypt the access token
         let accessToken = await decryptToken(currentUser.encryptedToken);
 
         // Define project and zone, ensuring they are not undefined
-        let project = process.env.GCP_PROJECT_ID || 'default-project';
+        let project = process.env.GCP_PROJECT_ID || 'privacytoolbox';
         let zone = process.env.GCP_DEFAULT_ZONE || 'us-west1-a';
 
         // Fetch machine types and accelerator types (GPUs)
@@ -168,6 +186,7 @@ export default function UserProfile() {
                     <p>Email: {currentUser.email}</p>
                     <p>Role: {currentUser.role}</p>
                     <p>OAuth2 Authenticated: {currentUser.encryptedToken ? "Yes" : "No"}</p>
+                    <p>Hugging Face Token Stored: {loaderData.hasHuggingFaceToken ? "Yes" : "No"}</p>
                 </div>
 
                 {/* Update Role Form */}
@@ -206,20 +225,24 @@ export default function UserProfile() {
                     </Form>
                 )}
 
-
-                {/* Simplified GPUs Display */}
+                {/* GPU Types Selection Form */}
                 {loaderData.acceleratorTypes && (
-                    <div>
-                        <h2>Available GPUs:</h2>
-                        {/* Consider using a table or a grid component here for better data presentation */}
-                        <ul>
-                            {loaderData.acceleratorTypes.map((gpu) => (
-                                <li key={gpu.id}>
-                                    {gpu.name} - Description: {gpu.description}, Estimated Usage: {gpu.estimatedUsagePerHour}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                    <Form method="post" action="/path/to/your/backend/function" className="mt-6">
+                        <div className="mt-4">
+                            <label htmlFor="acceleratorType" className="block text-sm font-medium text-gray-700">Select GPU Type:</label>
+                            <select id="acceleratorType" name="acceleratorType" required className="mt-1 block w-full border-2 p-2 rounded">
+                                <option value="">Select a GPU type</option>
+                                {loaderData.acceleratorTypes.map((gpu) => (
+                                    <option key={gpu.id} value={gpu.name}>
+                                        {gpu.name} - Description: {gpu.description}, Estimated Usage: {gpu.estimatedUsagePerHour}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <button type="submit" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
+                            Run Code
+                        </button>
+                    </Form>
                 )}
 
                 {/* Delete Account Form */}
@@ -239,6 +262,17 @@ export default function UserProfile() {
                     >
                         Link GCP Account
                     </button>
+                </div>
+
+                {/* Form to submit Hugging Face Access token */}
+                <div className="mt-4">
+                    <Form method="post" className="bg-white p-4 rounded shadow">
+                        <label htmlFor="huggingFaceToken" className="block text-sm font-medium text-gray-700">Hugging Face Access Token:</label>
+                        <input id="huggingFaceToken" name="huggingFaceToken" type="text" required className="mt-1 block w-full border-2 p-2 rounded" />
+                        <button type="submit" name="_action" value="saveHuggingFaceToken" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
+                            Save Token
+                        </button>
+                    </Form>
                 </div>
             </main>
         </div>

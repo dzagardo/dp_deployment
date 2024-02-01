@@ -37,6 +37,7 @@ function NCMLView() {
   const [machineTypes, setMachineTypes] = useState<MachineType[]>([]);
   const [selectedMachineType, setSelectedMachineType] = useState('');
   const [selectedOptimizer, setSelectedOptimizer] = useState('adam'); // New state for optimizer
+  const [selectedComputeZone, setSelectedComputeZone] = useState('us-west1-a'); // New state for optimizer
   const [datasetSource, setDatasetSource] = useState('yourDatasets'); // New state to track the dataset source
   const [huggingFaceDatasetQuery, setHuggingFaceDatasetQuery] = useState(''); // State to track the Hugging Face search query
   const [datasets, setDatasets] = useState<{ name: string; description: string }[]>([]);
@@ -214,29 +215,30 @@ function NCMLView() {
     }
   }
 
-  // Function to handle the Hugging Face model search
-  const handleHuggingFaceModelSearch = async () => {
-    if (huggingFaceModelQuery.trim() !== '') { // Check if the query is not empty or only whitespace
-      const searchParams = {
-        search: huggingFaceModelQuery,
-        // You can add more parameters here if needed, like author, filter, etc.
-      };
-      const searchResults = await fetchHuggingFaceModels(searchParams);
-      setModels(searchResults);
-    } else {
-      console.error("Search query is empty");
-    }
-  };
-
   const handleRunCode = (event: React.FormEvent) => {
-    event.preventDefault();
-    // Implement your logic to run the code here
-    // For example, you might want to send a request to a server to run a job
+    console.log("numEpochs " + numEpochs);
+    console.log("gradAccum " + gradAccum);
+    console.log("sampleSize " + sampleSize);
+    console.log("microBatchSize " + microBatchSize);
+    console.log("learningRate " + learningRate);
+    console.log("batchSize " + batchSize);
+    console.log("selectedModel " + selectedModel);
+    console.log("selectedDataset " + selectedDataset);
+    console.log("selectedMachineType " + selectedMachineType);
+    console.log("selectedOptimizer " + selectedOptimizer);
+    console.log("selectedComputeZone " + selectedComputeZone);
+    console.log("modelSource " + modelSource);
+    console.log("datasetSource " + datasetSource);
+    console.log("Encrypted HF Access Token " + currentUser.encryptedHFAccessToken);
     console.log("Running code with the selected options...");
   };
 
   const handleOptimizerChange = (event: SelectChangeEvent<string>) => {
     setSelectedOptimizer(event.target.value);
+  };
+
+  const handleSelectComputeZone = (event: SelectChangeEvent<string>) => {
+    setSelectedComputeZone(event.target.value);
   };
 
   const handleMachineTypeChange = (event: SelectChangeEvent<string>) => {
@@ -253,6 +255,10 @@ function NCMLView() {
     setHuggingFaceDatasetQuery(event.target.value);
   };
 
+  const handleDatasetSelect = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setSelectedDataset(event.target.value); // Update the selected dataset when the user selects an option
+  };
+
   const handleHuggingFaceDatasetSearch = async () => {
     const searchParams = {
       query: huggingFaceDatasetQuery,
@@ -260,10 +266,6 @@ function NCMLView() {
     };
     const searchResults = await fetchHuggingFaceDatasets(searchParams);
     setDatasets(searchResults);
-  };
-
-  const handleDatasetSelect = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-    setSelectedDataset(event.target.value); // Update the selected dataset when the user selects an option
   };
 
   const handleModelSelect = (event: { target: { value: React.SetStateAction<string>; }; }) => {
@@ -278,6 +280,20 @@ function NCMLView() {
     setHuggingFaceModelQuery(event.target.value);
   };
 
+  // Function to handle the Hugging Face model search
+  const handleHuggingFaceModelSearch = async () => {
+    if (huggingFaceModelQuery.trim() !== '') { // Check if the query is not empty or only whitespace
+      const searchParams = {
+        search: huggingFaceModelQuery,
+        // You can add more parameters here if needed, like author, filter, etc.
+      };
+      const searchResults = await fetchHuggingFaceModels(searchParams);
+      setModels(searchResults);
+    } else {
+      console.error("Search query is empty");
+    }
+  };
+
   const consistentMarginStyle = { margin: 'normal', mt: 2, mb: 2 }; // Define consistent margin
 
   return (
@@ -285,7 +301,6 @@ function NCMLView() {
       <Typography variant="h4" gutterBottom>
         LLM Fine-Tuning Dashboard
       </Typography>
-
 
       <Box sx={{ marginBottom: 2 }}>
         <Paper elevation={3} sx={{ padding: 3 }}> {/* Add Paper component with elevation and padding */}
@@ -367,8 +382,6 @@ function NCMLView() {
         </Paper>
       </Box>
 
-
-
       <Box sx={{ marginBottom: 2 }}>
         <Paper elevation={3} sx={{ padding: 3 }}> {/* Add Paper component with elevation and padding */}
           <Typography variant="h5" gutterBottom>
@@ -447,8 +460,6 @@ function NCMLView() {
           )}
         </Paper>
       </Box>
-
-
 
       <Box sx={{ marginBottom: 2 }}>
         <Paper elevation={3} sx={{ padding: 3 }}> {/* Add Paper component with elevation and padding */}
@@ -552,6 +563,21 @@ function NCMLView() {
             </Grid>
           </Grid>
 
+          <FormControl fullWidth sx={consistentMarginStyle}>
+            <InputLabel id="zone-label">Compute Zone</InputLabel>
+            <Select
+              labelId="compute-zone"
+              id="computeZone"
+              name="computeZone"
+              value={selectedComputeZone}
+              onChange={handleSelectComputeZone}
+              label="Compute Zone"
+            >
+              <MenuItem value="us-west1-a">us-west1-a</MenuItem>
+              {/* Add more compute zones */}
+            </Select>
+          </FormControl>
+
           {/* Machine Types Selection */}
           {machineTypes.length > 0 && (
             <FormControl fullWidth sx={consistentMarginStyle}>
@@ -573,7 +599,7 @@ function NCMLView() {
             </FormControl>
           )}
 
-          <Button type="submit" variant="contained" color="primary">
+          <Button type="submit" variant="contained" color="primary" onClick={handleRunCode}>
             Train Model
           </Button>
         </Paper>

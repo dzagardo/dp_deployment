@@ -18,8 +18,8 @@ model User {
   userDatasets    UserDataset[]   // Relation to UserDataset
   encryptedToken  String?         // Store the encrypted OAuth access token
   encryptedRefreshToken String?   // Store the encrypted OAuth refresh token
+  encryptedHFAccessToken String?   // Store the encrypted HuggingFace access token
 }
-
 
 model Password {
   hash   String

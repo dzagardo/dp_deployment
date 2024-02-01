@@ -23,6 +23,8 @@ import torch
 import base64
 from flask_socketio import SocketIO, emit
 from time import sleep
+from google.oauth2 import service_account
+from googleapiclient import discovery
 
 ### DP ALGORITHM REGISTRY ###
 # Register the algorithms
@@ -665,3 +667,85 @@ def handle_message(data):
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
+
+@app.route('/run-code', methods=['POST'])
+def run_code():
+    data = request.json  # Or request.form if sent as form data
+    selectedComputeZone = data.get('selectedComputeZone')
+    selectedMachineType = data.get('selectedMachineType')
+    numEpochs = data.get('numEpochs')
+    gradAccum = data.get('gradAccum')
+    sampleSize = data.get('sampleSize')
+    microBatchSize = data.get('microBatchSize')
+    learningRate = data.get('learningRate')
+    batchSize = data.get('batchSize')
+    selectedModel = data.get('selectedModel')
+    selectedDataset = data.get('selectedDataset')
+    selectedOptimizer = data.get('selectedOptimizer')
+    modelSource = data.get('modelSource')
+    datasetSource = data.get('datasetSource')
+
+    # Load your service account credentials
+    credentials = service_account.Credentials.from_service_account_file(
+        './credentials/service-account-file.json'
+    )
+    # Build a client to the GCP service you are using (e.g., Compute Engine)
+    service = discovery.build('compute', 'v1', credentials=credentials)
+
+    # Configure the VM or job parameters based on the POST request data
+    project = 'privacytoolbox'
+    zone = 'selectedComputeZone'
+    selectedMachineType = 'selectedComputeZone'
+    instance_body = {
+        "name": "instance-name",  # Name of the VM instance
+        "machineType": f"zones/{selectedComputeZone}/machineTypes/{selectedMachineType}",  # Path to the machine type
+        "disks": [
+            {
+                "boot": True,
+                "initializeParams": {
+                    "sourceImage": "projects/debian-cloud/global/images/family/debian-10",  # Path to the disk image
+                }
+            }
+        ],
+        "networkInterfaces": [
+            {
+                "network": "global/networks/default",
+                "accessConfigs": [
+                    {
+                        "type": "ONE_TO_ONE_NAT",
+                        "name": "External NAT"
+                    }
+                ]
+            }
+        ],
+        "serviceAccounts": [
+            {
+                "email": "1078644946420-compute@developer.gserviceaccount.com",  # Service account email
+                "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                ]
+            }
+        ],
+        # Specify any metadata that you need to pass to the instance for your training job
+        "metadata": {
+            "items": [
+                {
+                    "key": "startup-script",
+                    "value": f"""
+                    #!/bin/bash
+                    # Commands to install dependencies, set up environment, etc.
+                    # Clone your repository or pull your training code
+                    # Run your training script with the provided parameters
+                    python train.py --num_epochs={numEpochs} --grad_accum={gradAccum} --sample_size={sampleSize} --micro_batch_size={microBatchSize} --learning_rate={learningRate} --batch_size={batchSize} --model={selectedModel} --dataset={selectedDataset} --optimizer={selectedOptimizer}
+                    """
+                }
+            ]
+        }
+    }
+
+    # Call the GCP API to start a new VM instance
+    request = service.instances().insert(project=project, zone=zone, body=instance_body)
+    response = request.execute()
+
+    # You can handle the response here
+    return 'Job submitted', 200
