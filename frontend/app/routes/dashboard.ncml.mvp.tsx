@@ -215,23 +215,50 @@ function NCMLView() {
     }
   }
 
-  const handleRunCode = (event: React.FormEvent) => {
-    console.log("numEpochs " + numEpochs);
-    console.log("gradAccum " + gradAccum);
-    console.log("sampleSize " + sampleSize);
-    console.log("microBatchSize " + microBatchSize);
-    console.log("learningRate " + learningRate);
-    console.log("batchSize " + batchSize);
-    console.log("selectedModel " + selectedModel);
-    console.log("selectedDataset " + selectedDataset);
-    console.log("selectedMachineType " + selectedMachineType);
-    console.log("selectedOptimizer " + selectedOptimizer);
-    console.log("selectedComputeZone " + selectedComputeZone);
-    console.log("modelSource " + modelSource);
-    console.log("datasetSource " + datasetSource);
-    console.log("Encrypted HF Access Token " + currentUser.encryptedHFAccessToken);
+  const handleRunCode = async (event: { preventDefault: () => void; }) => {
+    event.preventDefault(); // Prevent default form submission behavior
+  
     console.log("Running code with the selected options...");
-  };
+  
+    // The URL of your Flask endpoint
+    const url = 'http://localhost:5000/run-code';
+  
+    // Data to send in the POST request
+    const postData = {
+      numEpochs: numEpochs,
+      gradAccum: gradAccum,
+      sampleSize: sampleSize,
+      microBatchSize: microBatchSize,
+      learningRate: learningRate,
+      batchSize: batchSize,
+      selectedModel: selectedModel,
+      selectedDataset: selectedDataset,
+      selectedMachineType: selectedMachineType,
+      selectedOptimizer: selectedOptimizer,
+      selectedComputeZone: selectedComputeZone,
+      modelSource: modelSource,
+      datasetSource: datasetSource,
+      encryptedHFAccessToken: currentUser.encryptedHFAccessToken
+    };
+  
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      } else {
+        console.log("Code execution initiated successfully.");
+      }
+    } catch (error) {
+      console.error('There was a problem with the fetch operation:', error);
+    }
+  };  
 
   const handleOptimizerChange = (event: SelectChangeEvent<string>) => {
     setSelectedOptimizer(event.target.value);

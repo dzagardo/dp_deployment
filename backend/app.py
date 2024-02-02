@@ -665,12 +665,10 @@ def handle_message(data):
         emit('response', {'char': char})  # Emit the character
         sleep(0.01)
 
-if __name__ == '__main__':
-    socketio.run(app, debug=True)
-
 @app.route('/run-code', methods=['POST'])
 def run_code():
     data = request.json  # Or request.form if sent as form data
+    print(data)
     selectedComputeZone = data.get('selectedComputeZone')
     selectedMachineType = data.get('selectedMachineType')
     numEpochs = data.get('numEpochs')
@@ -684,26 +682,33 @@ def run_code():
     selectedOptimizer = data.get('selectedOptimizer')
     modelSource = data.get('modelSource')
     datasetSource = data.get('datasetSource')
+    encryptedHFAccessToken = data.get('encryptedHFAccessToken')
 
     # Load your service account credentials
     credentials = service_account.Credentials.from_service_account_file(
-        './credentials/service-account-file.json'
+        'service-account-key.json'
     )
     # Build a client to the GCP service you are using (e.g., Compute Engine)
     service = discovery.build('compute', 'v1', credentials=credentials)
 
-    # Configure the VM or job parameters based on the POST request data
+    # Add the GPU configuration to your instance body
+    gpu_type = "nvidia-tesla-t4"
+    gpu_count = 1
+
+    # Assuming you want to use a Deep Learning VM Image optimized for TensorFlow 2.3
+    source_image_family = "tf2-2-3-cu110"
+    source_image_project = "deeplearning-platform-release"
+
     project = 'privacytoolbox'
-    zone = 'selectedComputeZone'
-    selectedMachineType = 'selectedComputeZone'
     instance_body = {
-        "name": "instance-name",  # Name of the VM instance
-        "machineType": f"zones/{selectedComputeZone}/machineTypes/{selectedMachineType}",  # Path to the machine type
+        "name": "instance-name-v4",
+        "machineType": f"zones/{selectedComputeZone}/machineTypes/{selectedMachineType}",
         "disks": [
             {
                 "boot": True,
                 "initializeParams": {
-                    "sourceImage": "projects/debian-cloud/global/images/family/debian-10",  # Path to the disk image
+                    "sourceImage": f"projects/{source_image_project}/global/images/family/{source_image_family}",
+                    "diskSizeGb": "200"
                 }
             }
         ],
@@ -718,6 +723,12 @@ def run_code():
                 ]
             }
         ],
+        "accelerators": [
+            {
+                "acceleratorType": f"zones/{selectedComputeZone}/acceleratorTypes/{gpu_type}",
+                "acceleratorCount": gpu_count
+            }
+        ],
         "serviceAccounts": [
             {
                 "email": "1078644946420-compute@developer.gserviceaccount.com",  # Service account email
@@ -726,26 +737,77 @@ def run_code():
                 ]
             }
         ],
+        "scheduling": {
+            "onHostMaintenance": "TERMINATE",
+            "automaticRestart": False
+        },
         # Specify any metadata that you need to pass to the instance for your training job
         "metadata": {
             "items": [
                 {
                     "key": "startup-script",
-                    "value": f"""
+                    "value": """
+
                     #!/bin/bash
-                    # Commands to install dependencies, set up environment, etc.
-                    # Clone your repository or pull your training code
-                    # Run your training script with the provided parameters
-                    python train.py --num_epochs={numEpochs} --grad_accum={gradAccum} --sample_size={sampleSize} --micro_batch_size={microBatchSize} --learning_rate={learningRate} --batch_size={batchSize} --model={selectedModel} --dataset={selectedDataset} --optimizer={selectedOptimizer}
+
+                    # Update package lists
+                    apt-get update
+
+                    # Install Python 3 and Pip
+                    apt-get install -y python3 python3-pip
+
+                    # Upgrade pip and setuptools
+                    pip3 install --upgrade pip setuptools
+
+                    # Now proceed with your other setup steps
+
+                    # Fetch the encrypted token from instance metadata
+                    ENCRYPTED_TOKEN=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/encryptedHFAccessToken" -H "Metadata-Flavor: Google")
+
+                    # Redirect stdout and stderr to a log file
+                    LOG_FILE="/var/log/startup-script.log"
+                    exec > $LOG_FILE 2>&1
+
+                    echo "Starting the startup script..."
+
+                    # Install Git, if not available
+                    if ! command -v git &>/dev/null; then
+                        apt-get install -y git
+                    fi
+
+                    # Install necessary dependencies for secret retrieval and decryption
+                    pip3 install google-cloud-secret-manager cryptography
+
+                    # Clone your repository
+                    git clone https://github.com/dzagardo/ncml_train.git
+                    cd ncml_train
+
+                    # Ensure the deploy script is executable
+                    chmod +x deploy.sh
+
+                    echo "Startup script preparation finished. Proceeding to execute deploy script."
+
+                    # Execute the deploy script
+                    ./deploy.sh $ENCRYPTED_TOKEN
+
                     """
+                },
+                {
+                    "key": "encryptedHFAccessToken",
+                    "value": encryptedHFAccessToken
                 }
             ]
         }
     }
 
     # Call the GCP API to start a new VM instance
-    request = service.instances().insert(project=project, zone=zone, body=instance_body)
-    response = request.execute()
+    gcp_request = service.instances().insert(project=project, zone=selectedComputeZone, body=instance_body)
+    response = gcp_request.execute()
+
+    print(response)
 
     # You can handle the response here
     return 'Job submitted', 200
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True)
