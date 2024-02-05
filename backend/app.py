@@ -705,11 +705,28 @@ def run_code():
         "machineType": f"zones/{selectedComputeZone}/machineTypes/{selectedMachineType}",
         "disks": [
             {
+                "autoDelete": True,
                 "boot": True,
+                "deviceName": "instance-1",
                 "initializeParams": {
+                    "diskSizeGb": "200",  # Updated disk size to meet image requirements
+                    "diskType": f"projects/{project}/zones/{selectedComputeZone}/diskTypes/pd-balanced",
+                    "labels": {},
                     "sourceImage": f"projects/{source_image_project}/global/images/family/{source_image_family}",
-                    "diskSizeGb": "200"
-                }
+                },
+                "mode": "READ_WRITE",
+                "type": "PERSISTENT"
+            },
+            {
+            "autoDelete": True,
+            "deviceName": "local-ssd-0",
+            "initializeParams": {
+                "diskSizeGb": "375",
+                "diskType": f"projects/{project}/zones/{selectedComputeZone}/diskTypes/local-ssd"
+            },
+            "interface": "NVME",
+            "mode": "READ_WRITE",
+            "type": "SCRATCH"
             }
         ],
         "networkInterfaces": [
@@ -723,9 +740,9 @@ def run_code():
                 ]
             }
         ],
-        "accelerators": [
+        "guestAccelerators": [
             {
-                "acceleratorType": f"zones/{selectedComputeZone}/acceleratorTypes/{gpu_type}",
+                "acceleratorType": f"projects/privacytoolbox/zones/{selectedComputeZone}/acceleratorTypes/{gpu_type}",
                 "acceleratorCount": gpu_count
             }
         ],
@@ -746,49 +763,39 @@ def run_code():
             "items": [
                 {
                     "key": "startup-script",
-                    "value": """
+                    "value":
+                    """
 
                     #!/bin/bash
-
-                    # Update package lists
-                    apt-get update
-
-                    # Install Python 3 and Pip
-                    apt-get install -y python3 python3-pip
-
-                    # Upgrade pip and setuptools
-                    pip3 install --upgrade pip setuptools
-
-                    # Now proceed with your other setup steps
-
-                    # Fetch the encrypted token from instance metadata
-                    ENCRYPTED_TOKEN=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/encryptedHFAccessToken" -H "Metadata-Flavor: Google")
 
                     # Redirect stdout and stderr to a log file
                     LOG_FILE="/var/log/startup-script.log"
                     exec > $LOG_FILE 2>&1
 
-                    echo "Starting the startup script..."
+                    echo "Starting the simplified startup script..."
 
                     # Install Git, if not available
                     if ! command -v git &>/dev/null; then
-                        apt-get install -y git
+                        echo "Installing Git..."
+                        # Ensure system package database is up to date
+                        sudo apt-get update
+                        sudo apt-get install -y git || { echo "Git installation failed"; exit 1; }
                     fi
 
-                    # Install necessary dependencies for secret retrieval and decryption
-                    pip3 install google-cloud-secret-manager cryptography
+                    echo "Cloning repository..."
+                    git clone https://github.com/dzagardo/ncml_train.git || { echo "Failed to clone repository"; exit 1; }
 
-                    # Clone your repository
-                    git clone https://github.com/dzagardo/ncml_train.git
-                    cd ncml_train
+                    echo "Changing directory to ncml_train..."
+                    cd ncml_train || { echo "Failed to change directory to ncml_train"; exit 1; }
 
-                    # Ensure the deploy script is executable
-                    chmod +x deploy.sh
+                    # Ensure the new startup script is executable
+                    echo "Making startup.sh script executable..."
+                    chmod +x startup.sh
 
-                    echo "Startup script preparation finished. Proceeding to execute deploy script."
+                    echo "Executing startup.sh script..."
+                    ./startup.sh || { echo "Execution of startup.sh failed"; exit 1; }
 
-                    # Execute the deploy script
-                    ./deploy.sh $ENCRYPTED_TOKEN
+                    echo "Initial startup script completed."
 
                     """
                 },
