@@ -601,6 +601,7 @@ function NCMLView() {
               label="Compute Zone"
             >
               <MenuItem value="us-west1-a">us-west1-a</MenuItem>
+              <MenuItem value="us-west3-b">us-west3-b</MenuItem>
               {/* Add more compute zones */}
             </Select>
           </FormControl>

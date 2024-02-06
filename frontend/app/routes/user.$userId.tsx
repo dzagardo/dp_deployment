@@ -7,6 +7,20 @@ import { fetchComputeResources } from "~/models/gcpauth.server";
 import { useUser } from "~/utils";
 import { refreshAccessToken, updateUserToken, fetchAllMachineTypesWithDetails, fetchAcceleratorTypes } from "~/models/gcpauth.server";
 import { updateHuggingFaceToken } from "~/models/user.server";
+import * as React from 'react';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
+import Paper from '@mui/material/Paper';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import { Link as RouterLink } from '@remix-run/react';
 
 export const action: ActionFunction = async ({ request, params }) => {
     const formData = await request.formData();
@@ -107,17 +121,6 @@ export const loader: LoaderFunction = async ({ params }) => {
         const hasHuggingFaceToken = Boolean(currentUser.encryptedHFAccessToken);
         loaderData.hasHuggingFaceToken = hasHuggingFaceToken;
 
-        // Decrypt the access token
-        let accessToken = await decryptToken(currentUser.encryptedToken);
-
-        // Define project and zone, ensuring they are not undefined
-        let project = process.env.GCP_PROJECT_ID || 'privacytoolbox';
-        let zone = process.env.GCP_DEFAULT_ZONE || 'us-west1-a';
-
-        // Fetch machine types and accelerator types (GPUs)
-        const machineTypes = await fetchAllMachineTypesWithDetails(accessToken, project, zone);
-        const acceleratorTypes = await fetchAcceleratorTypes(accessToken, project, zone);
-
         // Update loaderData with fetched resources
         loaderData.isAuthenticated = true;
         loaderData.user = {
@@ -126,8 +129,6 @@ export const loader: LoaderFunction = async ({ params }) => {
             role: currentUser.role || 'No role assigned',
             encryptedToken: currentUser.encryptedToken,
         };
-        loaderData.machineTypes = machineTypes;
-        loaderData.acceleratorTypes = acceleratorTypes;
 
         return json(loaderData);
     } catch (error) {
@@ -141,140 +142,112 @@ export default function UserProfile() {
     const currentUser = useUser();
     const loaderData = useLoaderData<LoaderData>();
 
-    const { computeResources } = loaderData;
-
-    // Check if user is defined before accessing its properties
-    if (!currentUser) {
-        return <div>Error: User data is not available.</div>;
-    }
-
     // Adjusted to use the correct `user` object from loaderData
     const handleLinkGCPAccount = async () => {
-        // Ensure that you're using the correct URL and handling for initiating the OAuth flow
         window.location.href = `/user/linkgcp/${currentUser.id}`;
     };
 
+    if (!currentUser) {
+        return <Typography variant="h6" color="error">Error: User data is not available.</Typography>;
+    }
+
     return (
-        <div className="flex h-full min-h-screen flex-col">
-            <header className="flex items-center justify-between bg-slate-800 p-4 text-white">
-                <h1 className="text-3xl font-bold">
-                    <Link to="/">Home</Link>
-                </h1>
-                <h1 className="text-3xl font-bold">
-                    <Link to="/datasets">Datasets</Link>
-                </h1>
-                <h1 className="text-3xl font-bold">
-                    <Link to="/notes">Notes</Link>
-                </h1>
-                <h1 className="text-3xl font-bold">
-                    <Link to={`/user/${currentUser.id}`} className="text-white hover:text-blue-200">Profile</Link>
-                </h1>
-                <p>{currentUser.email} ({currentUser.role})</p>
-                <Form action="/logout" method="post">
-                    <button
-                        type="submit"
-                        className="rounded bg-slate-600 px-4 py-2 text-blue-100 hover:bg-blue-500 active:bg-blue-600"
-                    >
-                        Logout
-                    </button>
-                </Form>
-            </header>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <AppBar position="static">
+                <Toolbar>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        <Button color="inherit" component={RouterLink} to="/">Home</Button>
+                    </Typography>
+                    <Button color="inherit" component={RouterLink} to="/datasets">Datasets</Button>
+                    <Button color="inherit" component={RouterLink} to="/notes">Notes</Button>
+                    <Button color="inherit" component={RouterLink} to={`/user/${currentUser.id}`}>Profile</Button>
+                    <Typography>{currentUser.email} ({currentUser.role})</Typography>
+                    <Form action="/logout" method="post">
+                        <Button type="submit" color="inherit">Logout</Button>
+                    </Form>
+                </Toolbar>
+            </AppBar>
 
             <main className="flex-1 bg-white p-6">
-                <h1 className="text-2xl font-bold mb-4">{currentUser.email}'s Profile</h1>
-                <div className="bg-gray-100 p-4 rounded">
-                    <p>Email: {currentUser.email}</p>
-                    <p>Role: {currentUser.role}</p>
-                    <p>OAuth2 Authenticated: {currentUser.encryptedToken ? "Yes" : "No"}</p>
-                    <p>Hugging Face Token Stored: {loaderData.hasHuggingFaceToken ? "Yes" : "No"}</p>
-                </div>
+                <Typography variant="h4" gutterBottom>
+                    {currentUser.email}'s Profile
+                </Typography>
+                <Paper elevation={1} sx={{ padding: 2, backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                    <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body1">Email: {currentUser.email}</Typography>
+                    </Box>
+                    <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body1">Role: {currentUser.role}</Typography>
+                    </Box>
+                    <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body1">OAuth2 Authenticated: {currentUser.encryptedToken ? "Yes" : "No"}</Typography>
+                    </Box>
+                    <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body1">Hugging Face Token Stored: {loaderData.hasHuggingFaceToken ? "Yes" : "No"}</Typography>
+                    </Box>
+                </Paper>
 
                 {/* Update Role Form */}
-                <div className="mt-4">
-                    <Form method="post" className="bg-white p-4 rounded shadow">
-                        <label htmlFor="newRole" className="block text-sm font-medium text-gray-700">New Role:</label>
-                        <select id="newRole" name="newRole" required className="mt-1 block w-full border-2 p-2 rounded">
-                            <option value="">Select new role</option>
-                            <option value="DATA_ADMINISTRATOR">Data Administrator</option>
-                            <option value="DATA_SCIENTIST">Data Scientist</option>
-                            <option value="DATA_OWNER">Data Owner</option>
-                        </select>
-                        <button type="submit" name="_action" value="updateRole" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
+                <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                    <Form method="post">
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="role-select-label">New Role</InputLabel>
+                            <Select
+                                labelId="role-select-label"
+                                id="newRole"
+                                name="newRole"
+                                label="New Role"
+                                required
+                            >
+                                <MenuItem value="">
+                                    <em>None</em>
+                                </MenuItem>
+                                <MenuItem value="DATA_ADMINISTRATOR">Data Administrator</MenuItem>
+                                <MenuItem value="DATA_SCIENTIST">Data Scientist</MenuItem>
+                                <MenuItem value="DATA_OWNER">Data Owner</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <Button type="submit" name="_action" value="updateRole" variant="contained" color="primary" sx={{ mt: 2 }}>
                             Update Role
-                        </button>
+                        </Button>
                     </Form>
-                </div>
+                </Paper>
 
-                {/* Machine Types Selection Form */}
-                {loaderData.machineTypes && (
-                    <Form method="post" action="/path/to/your/backend/function">
-                        <div className="mt-4">
-                            <label htmlFor="machineType" className="block text-sm font-medium text-gray-700">Select Machine Type:</label>
-                            <select id="machineType" name="machineType" required className="mt-1 block w-full border-2 p-2 rounded">
-                                <option value="">Select a machine type</option>
-                                {loaderData.machineTypes.map((type) => (
-                                    <option key={type.id} value={type.name}>
-                                        {type.name} - Description: {type.description}, Estimated Usage: {type.estimatedUsagePerHour}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <button type="submit" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
-                            Run Code
-                        </button>
-                    </Form>
-                )}
+                <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
 
-                {/* GPU Types Selection Form */}
-                {loaderData.acceleratorTypes && (
-                    <Form method="post" action="/path/to/your/backend/function" className="mt-6">
-                        <div className="mt-4">
-                            <label htmlFor="acceleratorType" className="block text-sm font-medium text-gray-700">Select GPU Type:</label>
-                            <select id="acceleratorType" name="acceleratorType" required className="mt-1 block w-full border-2 p-2 rounded">
-                                <option value="">Select a GPU type</option>
-                                {loaderData.acceleratorTypes.map((gpu) => (
-                                    <option key={gpu.id} value={gpu.name}>
-                                        {gpu.name} - Description: {gpu.description}, Estimated Usage: {gpu.estimatedUsagePerHour}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <button type="submit" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
-                            Run Code
-                        </button>
-                    </Form>
-                )}
-
-                {/* Delete Account Form */}
-                <div className="mt-4">
-                    <Form method="post" className="bg-white p-4 rounded shadow">
-                        <button type="submit" name="_action" value="delete" className="bg-red-500 text-white px-4 py-2 rounded">
-                            Delete Account
-                        </button>
-                    </Form>
-                </div>
-
-                {/* Button to Link GCP Account */}
-                <div className="mt-4">
-                    <button
-                        onClick={handleLinkGCPAccount}
-                        className="bg-green-500 text-white px-4 py-2 rounded"
-                    >
+                    {/* Button to Link GCP Account */}
+                    <Button onClick={handleLinkGCPAccount} variant="contained" color="success" sx={{ mt: 2 }}>
                         Link GCP Account
-                    </button>
-                </div>
+                    </Button>
+
+                    {/* Delete Account Form */}
+                    <Form method="post">
+                        <Button type="submit" name="_action" value="delete" variant="contained" color="error" sx={{ mt: 2 }}>
+                            Delete Account
+                        </Button>
+                    </Form>
+                </Paper>
+
+
 
                 {/* Form to submit Hugging Face Access token */}
-                <div className="mt-4">
-                    <Form method="post" className="bg-white p-4 rounded shadow">
-                        <label htmlFor="huggingFaceToken" className="block text-sm font-medium text-gray-700">Hugging Face Access Token:</label>
-                        <input id="huggingFaceToken" name="huggingFaceToken" type="text" required className="mt-1 block w-full border-2 p-2 rounded" />
-                        <button type="submit" name="_action" value="saveHuggingFaceToken" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
+                <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                    <Form method="post">
+                        <TextField
+                            id="huggingFaceToken"
+                            name="huggingFaceToken"
+                            label="Hugging Face Access Token"
+                            type="text"
+                            required
+                            fullWidth
+                            margin="normal"
+                        />
+                        <Button type="submit" name="_action" value="saveHuggingFaceToken" variant="contained" color="primary" sx={{ mt: 2 }}>
                             Save Token
-                        </button>
+                        </Button>
                     </Form>
-                </div>
+                </Paper>
             </main>
-        </div>
+        </Box>
     );
 }
