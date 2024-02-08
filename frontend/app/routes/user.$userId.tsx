@@ -158,8 +158,6 @@ export default function UserProfile() {
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                         <Button color="inherit" component={RouterLink} to="/">Home</Button>
                     </Typography>
-                    <Button color="inherit" component={RouterLink} to="/datasets">Datasets</Button>
-                    <Button color="inherit" component={RouterLink} to="/notes">Notes</Button>
                     <Button color="inherit" component={RouterLink} to={`/user/${currentUser.id}`}>Profile</Button>
                     <Typography>{currentUser.email} ({currentUser.role})</Typography>
                     <Form action="/logout" method="post">
@@ -181,6 +179,9 @@ export default function UserProfile() {
                     </Box>
                     <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body1">OAuth2 Authenticated: {currentUser.encryptedToken ? "Yes" : "No"}</Typography>
+                    </Box>
+                    <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body1">Encrypted HF Access Token: {currentUser.encryptedHFAccessToken}</Typography>
                     </Box>
                     <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body1">Hugging Face Token Stored: {loaderData.hasHuggingFaceToken ? "Yes" : "No"}</Typography>

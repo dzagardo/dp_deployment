@@ -696,7 +696,7 @@ def run_code():
     gpu_count = 1
 
     # Assuming you want to use a Deep Learning VM Image optimized for TensorFlow 2.3
-    source_image_family = "tf2-2-3-cu110"
+    source_image_family = "pytorch-2-0-gpu-debian-11"
     source_image_project = "deeplearning-platform-release"
 
     project = 'privacytoolbox'
@@ -742,8 +742,8 @@ def run_code():
         ],
         "guestAccelerators": [
             {
-                "acceleratorType": f"projects/privacytoolbox/zones/{selectedComputeZone}/acceleratorTypes/{gpu_type}",
-                "acceleratorCount": gpu_count
+            "acceleratorCount": 2,
+            "acceleratorType": "projects/privacytoolbox/zones/us-west1-b/acceleratorTypes/nvidia-tesla-v100"
             }
         ],
         "serviceAccounts": [
@@ -758,7 +758,6 @@ def run_code():
             "onHostMaintenance": "TERMINATE",
             "automaticRestart": False
         },
-        # Specify any metadata that you need to pass to the instance for your training job
         "metadata": {
             "items": [
                 {
@@ -768,9 +767,16 @@ def run_code():
 
                     #!/bin/bash
 
+                    export DEBIAN_FRONTEND=noninteractive
+                    sudo /opt/deeplearning/install-driver.sh
+
                     # Redirect stdout and stderr to a log file
                     LOG_FILE="/var/log/startup-script.log"
                     exec > $LOG_FILE 2>&1
+
+                    # Automatically accept NVIDIA driver installation
+                    echo "Automatically installing NVIDIA drivers if needed..."
+                    echo "y" | sudo /opt/deeplearning/install-driver.sh
 
                     echo "Starting the simplified startup script..."
 
@@ -782,18 +788,16 @@ def run_code():
                         sudo apt-get install -y git || { echo "Git installation failed"; exit 1; }
                     fi
 
-                    echo "Cloning repository..."
-                    git clone https://github.com/dzagardo/ncml_train.git || { echo "Failed to clone repository"; exit 1; }
+                    echo "Cloning the project repository..."
+                    git clone https://github.com/dzagardo/ncml_train.git
+                    cd ncml_train
 
-                    echo "Changing directory to ncml_train..."
-                    cd ncml_train || { echo "Failed to change directory to ncml_train"; exit 1; }
+                    # Ensure deploy.sh is executable
+                    echo "Making deploy.sh script executable..."
+                    chmod +x deploy.sh
 
-                    # Ensure the new startup script is executable
-                    echo "Making startup.sh script executable..."
-                    chmod +x startup.sh
-
-                    echo "Executing startup.sh script..."
-                    ./startup.sh || { echo "Execution of startup.sh failed"; exit 1; }
+                    echo "Running the project's startup script..."
+                    ./deploy.sh || { echo "Execution of deploy.sh failed"; exit 1; }
 
                     echo "Initial startup script completed."
 
